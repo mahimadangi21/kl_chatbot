@@ -38,8 +38,59 @@ INSTRUCTIONS:
 8. NEVER make up information. If the answer is truly not in the documents, say: "I don't have that specific information. Please contact HR."
 9. Be direct and concise. Do NOT repeat the question."""
 
+# ── Document Sections ───────────────────────────────────────────────────
+# Parse the knowledge base into named sections for smarter retrieval
+def _parse_sections(text: str) -> dict:
+    sections = {}
+    current_name = "general"
+    current_content = []
+    for line in text.split('\n'):
+        if line.startswith('=== ') and line.endswith(' ==='):
+            if current_content:
+                sections[current_name] = '\n'.join(current_content)
+            current_name = line[4:-4].strip()
+            current_content = []
+        else:
+            current_content.append(line)
+    if current_content:
+        sections[current_name] = '\n'.join(current_content)
+    return sections
+
+KB_SECTIONS = _parse_sections(DOCUMENT_CONTEXT)
+
+KEYWORD_MAP = {
+    'data-ai-ethics-policy.pdf': ['ethics', 'ai ethics', 'artificial intelligence', 'data ethics', 'principle', 'responsible', 'fairness', 'transparency'],
+    'posh-policy.pdf': ['posh', 'harassment', 'sexual', 'internal committee', 'complaint', 'respondent'],
+    'mahima_dangi_contract.pdf': ['contract', 'internship', 'stipend', 'salary', 'notice period', 'joining', 'start date', 'end date', 'mahima', 'dangi'],
+    'Email etiquette.pdf': ['email', 'etiquette', 'communication', 'professional email', 'reply', 'subject'],
+    'Module-4-Data-privacy-and-data-protection.pdf': ['privacy', 'gdpr', 'data protection', 'personal data', 'data breach', 'consent', 'rights'],
+}
+
+def _find_best_section(user_input: str) -> str:
+    """Find the most relevant document section for the question."""
+    query = user_input.lower()
+    best_doc = None
+    best_score = 0
+    
+    for doc_name, keywords in KEYWORD_MAP.items():
+        score = sum(1 for kw in keywords if kw in query)
+        if score > best_score:
+            best_score = score
+            best_doc = doc_name
+    
+    if best_doc and best_score > 0 and best_doc in KB_SECTIONS:
+        section_text = KB_SECTIONS[best_doc]
+        print(f"[INFO] Matched question to: {best_doc} (score={best_score})")
+        # Return only the relevant section (not all 66k chars)
+        return f"=== {best_doc} ===\n{section_text}"
+    
+    # Fallback: return all documents but limited to 15000 chars
+    print("[INFO] No specific section matched, using full context")
+    return DOCUMENT_CONTEXT[:15000]
+
 def _user_payload(user_input: str) -> str:
-    return f"DOCUMENT CONTEXT:\n{DOCUMENT_CONTEXT}\n\nQUESTION: {user_input}"
+    best_section = _find_best_section(user_input)
+    return f"DOCUMENT CONTEXT:\n{best_section}\n\nQUESTION: {user_input}"
 
 def _lang_suffix(language: str) -> str:
     if language == "Hindi":

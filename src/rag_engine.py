@@ -4,7 +4,7 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageCon
 from llama_index.core.settings import Settings
 from llama_index.llms.groq import Groq
 from llama_index.llms.gemini import Gemini
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.huggingface import HuggingFaceInferenceAPIEmbedding
 from llama_index.vector_stores.faiss import FaissVectorStore
 import faiss
 
@@ -40,9 +40,11 @@ def setup_models(provider=None):
     else:
         raise ValueError(f"Unsupported LLM_PROVIDER: {provider}")
 
-    # Upgraded Embeddings for higher semantic precision
-    embed_model = HuggingFaceEmbedding(
-        model_name="BAAI/bge-small-en-v1.5"
+    # Use Inference API instead of local Torch to save space and avoid build errors
+    hf_token = os.getenv("HF_TOKEN")
+    embed_model = HuggingFaceInferenceAPIEmbedding(
+        model_name="BAAI/bge-small-en-v1.5",
+        token=hf_token
     )
     
     Settings.llm = llm

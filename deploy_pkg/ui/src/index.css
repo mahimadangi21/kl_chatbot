@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-bg: #0f172a;
+  --color-brand-sidebar: #0b0f1a;
+  --color-brand-chat: #111827;
+  --color-brand-user: #2563eb;
+  --color-brand-bot: #1f2937;
+  --color-brand-text: #e5e7eb;
+  --color-brand-accent: #3b82f6;
+  
+  /* Light Theme Overrides */
+  --color-light-bg: #f8fafc;
+  --color-light-sidebar: #ffffff;
+  --color-light-chat: #ffffff;
+  --color-light-user: #2563eb;
+  --color-light-bot: #f1f5f9;
+  --color-light-text: #0f172a;
+  --color-light-border: #e2e8f0;
+}
+
+@layer base {
+  body {
+    @apply transition-colors duration-300;
+  }
+  
+  body.dark {
+    @apply bg-brand-bg text-brand-text;
+  }
+  
+  body.light {
+    @apply bg-light-bg text-light-text;
+  }
+}
+
+@layer components {
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-400/20 rounded-full hover:bg-gray-400/40 transition-colors;
+  }
+}
+
+.markdown-content p {
+  @apply mb-4 last:mb-0 leading-relaxed;
+}
+
+.markdown-content pre {
+  @apply my-4 p-4 rounded-xl bg-slate-900 border border-white/10 overflow-x-auto shadow-2xl;
+}
+
+.markdown-content code {
+  @apply font-mono text-sm px-1.5 py-0.5 rounded bg-blue-500/10 text-brand-accent transition-all;
+}
+
+.markdown-content pre code {
+  @apply p-0 bg-transparent text-gray-300;
+}
+
+.markdown-content blockquote {
+  @apply border-l-4 border-brand-accent/50 pl-4 italic my-4 text-gray-500 transition-all;
+}
+
+.recording-pulse {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}

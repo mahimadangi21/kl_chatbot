@@ -249,20 +249,51 @@ function App() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const lines = decoder.decode(value).split('\n');
+        
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
         for (const line of lines) {
           if (!line.trim()) continue;
           try {
             const data = JSON.parse(line);
+            
+            if (data.error) {
+              streamContent = `⚠️ **Error:** ${data.error}`;
+              setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1].content = streamContent;
+                return updated;
+              });
+              break;
+            }
+
+            if (data.status) {
+              setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1].content = `*${data.status}*`;
+                return updated;
+              });
+              continue;
+            }
+
             if (data.delta) {
-              streamContent += data.delta;
+              // If we were showing a status, clear it for the first real chunk
+              if (streamContent === '') {
+                streamContent = data.delta;
+              } else {
+                streamContent += data.delta;
+              }
+              
               setMessages(prev => {
                 const updated = [...prev];
                 updated[updated.length - 1].content = streamContent;
                 return updated;
               });
             }
-          } catch (e) { }
+          } catch (e) { 
+            console.error("Error parsing stream line:", e, line);
+          }
         }
       }
 

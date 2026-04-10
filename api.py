@@ -71,7 +71,7 @@ async def chat_endpoint(request: ChatRequest):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")}
+    return {"status": "ok", "model": os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")}
 
 # Serve pre-built React UI
 if os.path.exists("ui/dist"):

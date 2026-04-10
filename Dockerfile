@@ -10,7 +10,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Only need libgl1 for Faiss (very light)
-RUN apt-get update && apt-get install -y libgl1-mesa-glx && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libgl1 && rm -rf /var/lib/apt/lists/*
 
 # Fix: Hugging Face specific UID/GID permissions
 RUN useradd -m -u 1000 user

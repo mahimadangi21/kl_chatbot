@@ -73,14 +73,61 @@ def _find_best_section(user_input: str) -> str:
     return DOCUMENT_CONTEXT[:12000]
 
 # ── System Prompt ──────────────────────────────────────────────────────
-SYSTEM_PROMPT = """You are a helpful HR assistant for Kadel Lab Training Centre.
+SYSTEM_PROMPT = """You are an intelligent analyst. Your goal is NOT to give generic, memorized, or template-based responses. Instead, you must carefully analyze, interpret, and reason over the provided documents before answering.
 
-Rules:
-- Answer ONLY using facts explicitly stated in the DOCUMENT CONTEXT provided below.
-- Give a SHORT, direct answer. 
-- NEVER invent information. If the specific answer is not in the DOCUMENT CONTEXT, you must say: "I don't have that specific information. Please contact HR."
-- Do NOT output or repeat the document context.
-- Do NOT add your own conversational filler."""
+CORE INSTRUCTIONS:
+Deep Understanding First
+- Read and understand the user's query carefully.
+- Identify relevant sections from the documents.
+- Do NOT respond immediately — think step-by-step before answering.
+
+Context-Based Answering
+- Your answer MUST be grounded in the uploaded documents.
+- Do not hallucinate or make assumptions outside the given content.
+- If the answer is partially available, combine relevant parts logically.
+
+Analytical Reasoning
+- Break down complex queries into smaller parts.
+- Compare, infer, and synthesize information if needed.
+- Provide explanations, not just statements.
+
+Avoid Rote Responses
+- Do NOT copy sentences directly from documents unless necessary.
+- Paraphrase and explain in your own words.
+- Ensure the answer sounds natural and human-like.
+
+Structured Responses
+- Use clear formatting:
+  - Short explanation
+  - Key points (if needed)
+  - Conclusion (if applicable)
+
+If Information is Missing
+- Clearly say: "The provided documents do not contain enough information to fully answer this question."
+- Do NOT guess or fabricate.
+
+Multi-Document Reasoning
+- If multiple documents are available:
+  - Combine insights from different sources
+  - Highlight relationships or differences
+
+Clarity & Simplicity
+- Keep language simple and easy to understand.
+- Avoid unnecessary jargon unless required.
+
+Follow-up Thinking
+- If the question is ambiguous, interpret intelligently and mention your assumption.
+
+Answer Quality Check (IMPORTANT)
+Before finalizing:
+- Is this answer based on documents?
+- Did I analyze instead of copy?
+- Is this clear and helpful?
+
+RESPONSE STYLE:
+- Natural, conversational, but intelligent.
+- Slightly explanatory (like a smart human, not a robot).
+- No robotic or repetitive phrasing."""
 
 def _lang_suffix(language: str) -> str:
     if language == "Hindi":
@@ -96,22 +143,13 @@ def _groq_stream(user_input, history, language):
 
     section = _find_best_section(user_input)
     
-    sys_msg = (
-        "You are a strict QA assistant. Answer questions using ONLY the provided DOCUMENT.\n"
-        "RULES:\n"
-        "1. Write EXACTLY ONE SENTENCE.\n"
-        "2. DO NOT copy or continue the document text.\n"
-        "3. If the answer is not in the DOCUMENT, reply exactly: 'HR can help with that.'\n"
-        "4. DO NOT use bullet points or headers."
-    )
-    
-    prompt = f"DOCUMENT:\n{section}\n\nQUESTION: {user_input}\n"
+    prompt = f"Please analyze the following document context to answer the query.\n\n<DOCUMENT>\n{section}\n</DOCUMENT>\n\nUser Query: {user_input}\n"
     if language == "Hindi":
-        prompt += "Answer in Hindi."
+        prompt += "\nAnswer in Hindi."
     elif language == "Hinglish":
-        prompt += "Answer in Hinglish."
+        prompt += "\nAnswer in Hinglish."
 
-    messages = [{"role": "system", "content": sys_msg}]
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     for msg in history[-4:]:
         if msg.get("role") in ["user", "assistant"] and msg.get("content"):
             messages.append({"role": msg["role"], "content": msg["content"]})
@@ -121,21 +159,14 @@ def _groq_stream(user_input, history, language):
     stream = client.chat.completions.create(
         model=GROQ_MODEL,
         messages=messages,
-        temperature=0.0,       
-        max_tokens=100,        
+        temperature=0.2,       
+        max_tokens=1024,        
         stream=True
     )
     
-    output = ""
     for chunk in stream:
         if chunk.choices and chunk.choices[0].delta.content:
-            text = chunk.choices[0].delta.content
-            output += text
-            # Auto-cutoff if it starts hallucinating contract clauses
-            if any(hallucination in output for hallucination in ["\n Termination", "\n Confidentiality", "\n Grievance", "\n Leave Policy"]):
-                break
-            yield text
-
+            yield chunk.choices[0].delta.content
 
 # ── GEMINI Engine ──────────────────────────────────────────────────────
 def _gemini_stream(user_input, history, language):
@@ -143,7 +174,9 @@ def _gemini_stream(user_input, history, language):
     genai.configure(api_key=GEMINI_API_KEY)
 
     section = _find_best_section(user_input)
-    sys_content = SYSTEM_PROMPT + f"\n\nDOCUMENT CONTEXT:\n{section}\n\n" + _lang_suffix(language)
+    sys_content = SYSTEM_PROMPT + _lang_suffix(language)
+    
+    gemini_prompt = f"Please analyze the following document context to answer the query.\n\n<DOCUMENT>\n{section}\n</DOCUMENT>\n\nUser Query: {user_input}\n"
 
     gemini_history = []
     for msg in history[-4:]:
@@ -157,9 +190,9 @@ def _gemini_stream(user_input, history, language):
     )
     chat = model.start_chat(history=gemini_history)
     response = chat.send_message(
-        user_input,
+        gemini_prompt,
         stream=True,
-        generation_config={"temperature": 0.0, "max_output_tokens": 400}
+        generation_config={"temperature": 0.2, "max_output_tokens": 1024}
     )
     for chunk in response:
         if chunk.text:

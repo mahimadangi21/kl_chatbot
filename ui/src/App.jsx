@@ -242,7 +242,7 @@ function App() {
         })
       });
 
-      const reader = resp.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let streamContent = '';
 

@@ -1,46 +1,28 @@
 import os
-import google.generativeai as genai
 from dotenv import load_dotenv
-from pypdf import PdfReader
 
 load_dotenv()
 
-# ── Gemini Client Setup ───────────────────────────────────────────────
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# ── API Keys ───────────────────────────────────────────────────────────
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+# Normalize old model names to current ones
 if GEMINI_MODEL in ["gemini-1.5-flash", "gemini-1.5-flash-latest"]:
     GEMINI_MODEL = "gemini-2.5-flash"
-KNOWLEDGE_DIR = "knowledge_base"
 
 # ── Document Context ───────────────────────────────────────────────────
-# Import pre-extracted text (extracted locally, committed to repo)
-# This ensures Railway/HuggingFace deployments have document content
-# even without Git LFS support.
 try:
     from knowledge_base_text import KNOWLEDGE_BASE_TEXT
     DOCUMENT_CONTEXT = KNOWLEDGE_BASE_TEXT
-    print(f"[INFO] Loaded knowledge base from pre-extracted text: {len(DOCUMENT_CONTEXT)} chars")
+    print(f"[INFO] Loaded knowledge base: {len(DOCUMENT_CONTEXT)} chars")
 except ImportError:
-    # Fallback: try reading PDFs at runtime
-    print("[WARN] knowledge_base_text.py not found. Trying to read PDFs directly...")
+    print("[WARN] knowledge_base_text.py not found. No document context available.")
     DOCUMENT_CONTEXT = ""
-    if os.path.exists(KNOWLEDGE_DIR):
-        from pypdf import PdfReader
-        for filename in os.listdir(KNOWLEDGE_DIR):
-            if filename.endswith(".pdf"):
-                try:
-                    reader = PdfReader(os.path.join(KNOWLEDGE_DIR, filename))
-                    for page in reader.pages:
-                        text = page.extract_text()
-                        if text:
-                            DOCUMENT_CONTEXT += text + "\n"
-                except Exception as e:
-                    print(f"Error reading {filename}: {e}")
-    if not DOCUMENT_CONTEXT:
-        print("[ERROR] No document context could be loaded!")
 
-
-# ── System Prompt ───────────────────────────────────────────────────
+# ── System Prompt ───────────────────────────────────────────────────────
 SYSTEM_PROMPT = """You are the Kadel Lab Assistant — a professional AI assistant for Kadel Lab Training Centre.
 
 STRICT RULES:
@@ -49,51 +31,72 @@ STRICT RULES:
 3. Be direct, concise, and professional.
 4. Do NOT repeat the question back before answering."""
 
-def _build_messages(user_input: str, history: list, language: str):
-    lang_instruction = ""
-    if language == "Hindi":
-        lang_instruction = " Always respond in Hindi (Devanagari script)."
-    elif language == "Hinglish":
-        lang_instruction = " Always respond in Hinglish (mix of Hindi and English)."
+def _user_payload(user_input: str) -> str:
+    return f"DOCUMENT CONTEXT:\n{DOCUMENT_CONTEXT}\n\nQUESTION: {user_input}"
 
-    system_instruction = SYSTEM_PROMPT + lang_instruction
-    
-    # Gemini uses 'user' and 'model' roles
+def _lang_suffix(language: str) -> str:
+    if language == "Hindi":
+        return " Always respond in Hindi (Devanagari script)."
+    elif language == "Hinglish":
+        return " Always respond in Hinglish (mix of Hindi and English)."
+    return ""
+
+# ── GROQ Engine ─────────────────────────────────────────────────────────
+def _groq_stream(user_input, history, language):
+    from groq import Groq
+    client = Groq(api_key=GROQ_API_KEY)
+
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + _lang_suffix(language)}]
+    for msg in history[-6:]:
+        if msg.get("role") in ["user", "assistant"] and msg.get("content"):
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": _user_payload(user_input)})
+
+    stream = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=messages,
+        temperature=0.1,
+        max_tokens=512,
+        stream=True
+    )
+    for chunk in stream:
+        if chunk.choices and chunk.choices[0].delta.content:
+            yield chunk.choices[0].delta.content
+
+# ── GEMINI Engine ───────────────────────────────────────────────────────
+def _gemini_stream(user_input, history, language):
+    import google.generativeai as genai
+    genai.configure(api_key=GEMINI_API_KEY)
+
     gemini_history = []
     for msg in history[-6:]:
         if msg.get("role") and msg.get("content"):
             role = "model" if msg["role"] == "assistant" else "user"
             gemini_history.append({"role": role, "parts": [msg["content"]]})
 
-    user_payload = f"DOCUMENT CONTEXT:\n{DOCUMENT_CONTEXT}\n\nQUESTION: {user_input}"
-    
-    return system_instruction, gemini_history, user_payload
-
-
-def generate_response(user_input: str, history: list = [], language: str = "English") -> str:
-    system_instruction, gemini_history, user_payload = _build_messages(user_input, history, language)
-    
     model = genai.GenerativeModel(
         model_name=GEMINI_MODEL,
-        system_instruction=system_instruction
+        system_instruction=SYSTEM_PROMPT + _lang_suffix(language)
     )
-    
     chat = model.start_chat(history=gemini_history)
-    response = chat.send_message(user_payload, generation_config={"temperature": 0.1})
-    
-    return response.text
-
-def generate_response_stream(user_input: str, history: list = [], language: str = "English"):
-    system_instruction, gemini_history, user_payload = _build_messages(user_input, history, language)
-    
-    model = genai.GenerativeModel(
-        model_name=GEMINI_MODEL,
-        system_instruction=system_instruction
+    response = chat.send_message(
+        _user_payload(user_input),
+        stream=True,
+        generation_config={"temperature": 0.1}
     )
-    
-    chat = model.start_chat(history=gemini_history)
-    response = chat.send_message(user_payload, stream=True, generation_config={"temperature": 0.1})
-
     for chunk in response:
         if chunk.text:
             yield chunk.text
+
+# ── Public Router ───────────────────────────────────────────────────────
+def generate_response_stream(user_input: str, history: list = [], language: str = "English", model: str = "Groq"):
+    """Routes to Groq or Gemini based on frontend model selection."""
+    model_lower = model.lower()
+    if "gemini" in model_lower or model_lower == "gemini":
+        yield from _gemini_stream(user_input, history, language)
+    else:
+        # Default to Groq (handles 'Groq', 'Grok', 'groq', etc.)
+        yield from _groq_stream(user_input, history, language)
+
+def generate_response(user_input: str, history: list = [], language: str = "English", model: str = "Groq") -> str:
+    return "".join(generate_response_stream(user_input, history, language, model))

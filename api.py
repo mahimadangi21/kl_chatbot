@@ -60,7 +60,7 @@ async def chat_endpoint(request: ChatRequest):
 
             yield json.dumps({"status": "Thinking..."}) + "\n"
 
-            for chunk in generate_response_stream(msg, request.history, lang):
+            for chunk in generate_response_stream(msg, request.history, lang, request.model):
                 yield json.dumps({"delta": chunk}) + "\n"
                 await asyncio.sleep(0.01)
 

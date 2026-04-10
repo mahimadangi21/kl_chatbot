@@ -1,31 +1,21 @@
-# Using slim images for ultra-fast Zero-Torch build
-FROM node:20-slim AS build
-WORKDIR /app
-COPY ui/package*.json ./ui/
-RUN cd ui && npm install
-COPY ui/ ./ui/
-RUN cd ui && npm run build
-
+# Ultra-simple: React is pre-built locally, only Python needed here
 FROM python:3.11-slim
+
 WORKDIR /app
 
-# Only need libgl1 for Faiss (very light)
-RUN apt-get update && apt-get install -y libgl1 && rm -rf /var/lib/apt/lists/*
+# Minimal system dependency
+RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
 
-# Fix: Hugging Face specific UID/GID permissions
-RUN useradd -m -u 1000 user
-USER user
-ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH
-WORKDIR /home/user/app
-
-# Install light requirements
-COPY --chown=user requirements.txt .
+# Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy code and built frontend
-COPY --chown=user . .
-COPY --from=build /app/ui/dist /app/ui/dist
+# Copy all project files (including pre-built ui/dist)
+COPY . .
+
+# Hugging Face requires UID 1000
+RUN useradd -m -u 1000 user && chown -R user /app
+USER user
 
 ENV PORT=7860
 EXPOSE 7860

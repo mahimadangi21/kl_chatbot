@@ -1,111 +1,122 @@
 import os
+from groq import Groq
 from dotenv import load_dotenv
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, load_index_from_storage, PromptTemplate
-from llama_index.core.settings import Settings
-from llama_index.llms.groq import Groq
-from llama_index.llms.gemini import Gemini
-from llama_index.embeddings.huggingface import HuggingFaceInferenceAPIEmbedding
-from llama_index.vector_stores.faiss import FaissVectorStore
-import faiss
+from pypdf import PdfReader
 
-# Load environment variables
 load_dotenv()
 
+# ── Groq Client Setup ───────────────────────────────────────────────
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 KNOWLEDGE_DIR = "knowledge_base"
-PERSIST_DIR = "chroma_db_v3"
-EMBED_DIM = 384 # BGE-small is 384
 
-def setup_models(provider=None):
-    """Configures the LLM and Embedding models based on .env settings or passed provider."""
-    if not provider:
-        provider = os.getenv("LLM_PROVIDER", "groq").lower()
-    else:
-        provider = provider.lower()
-    elif provider in ["groq", "grok"]:
-        api_key = os.getenv("GROQ_API_KEY")
-        model_name = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-        if not api_key or api_key == "your_groq_api_key_here":
-            raise ValueError("GROQ_API_KEY not found in .env — please add it")
-        llm = Groq(model=model_name, api_key=api_key, temperature=0.0, max_tokens=512)
-        print(f"LLM Provider: groq ({model_name})")
-        
-    elif provider == "gemini":
-        api_key = os.getenv("GEMINI_API_KEY")
-        model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-        if not api_key or api_key == "your_gemini_api_key_here":
-            raise ValueError("GEMINI_API_KEY not found in .env — please add it")
-        llm = Gemini(model=f"models/{model_name}", api_key=api_key)
-        print(f"LLM Provider: gemini ({model_name})")
-        
-    else:
-        raise ValueError(f"Unsupported LLM_PROVIDER: {provider}")
-
-    # Use Inference API instead of local Torch to save space and avoid build errors
-    hf_token = os.getenv("HF_TOKEN")
-    embed_model = HuggingFaceInferenceAPIEmbedding(
-        model_name="BAAI/bge-small-en-v1.5",
-        token=hf_token
-    )
-    
-    Settings.llm = llm
-    Settings.embed_model = embed_model
-    Settings.context_window = 32000 # Optimized for Cloud LLMs (Groq/Gemini)
-    return llm, embed_model
-
-def build_index():
-    setup_models()
+# ── Document Loader ───────────────────────────────────────────────────
+def load_document_context():
+    """Reads all PDFs in the knowledge base and concatenates their text."""
+    context_text = ""
     if not os.path.exists(KNOWLEDGE_DIR):
-        os.makedirs(KNOWLEDGE_DIR)
+        print(f"Warning: {KNOWLEDGE_DIR} not found.")
+        return ""
+    
+    for filename in os.listdir(KNOWLEDGE_DIR):
+        if filename.endswith(".pdf"):
+            filepath = os.path.join(KNOWLEDGE_DIR, filename)
+            try:
+                reader = PdfReader(filepath)
+                for page in reader.pages:
+                    text = page.extract_text()
+                    if text:
+                        context_text += text + "\n"
+            except Exception as e:
+                print(f"Error reading {filename}: {e}")
+                
+    # Llama 3 70B on Groq supports 131k tokens (~500,000 characters)
+    # We can comfortably pass almost all the text directly into the system prompt!
+    max_chars = 300000 
+    if len(context_text) > max_chars:
+        context_text = context_text[:max_chars]
         
-    from llama_index.core.node_parser import SentenceSplitter
-    parser = SentenceSplitter(chunk_size=1024, chunk_overlap=128)
-    
-    reader = SimpleDirectoryReader(KNOWLEDGE_DIR)
-    documents = reader.load_data()
-    nodes = parser.get_nodes_from_documents(documents)
+    return context_text
 
-    print(f"Loaded {len(nodes)} document nodes")
-    
-    faiss_index = faiss.IndexFlatL2(EMBED_DIM)
-    vector_store = FaissVectorStore(faiss_index=faiss_index)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    
-    index = VectorStoreIndex(
-        nodes, storage_context=storage_context
-    )
-    index.storage_context.persist(persist_dir=PERSIST_DIR)
-    print("Index built and saved!")
-    return index
+# Load document context once on startup
+DOCUMENT_CONTEXT = load_document_context()
 
-def load_index():
-    setup_models()
-    if not os.path.exists(os.path.join(PERSIST_DIR, "docstore.json")):
-        print("No full index found. Building new index...")
-        return build_index()
-    
-    vector_store = FaissVectorStore.from_persist_dir(PERSIST_DIR)
-    storage_context = StorageContext.from_defaults(
-        vector_store=vector_store, persist_dir=PERSIST_DIR
-    )
-    index = load_index_from_storage(storage_context=storage_context)
-    print("Existing index loaded!")
-    return index
+# ── System Prompt ───────────────────────────────────────────────────
+SYSTEM_PROMPT = f"""You are the Kadel Lab Assistant — a professional AI assistant for Kadel Lab Training Centre.
 
-def get_query_engine(index):
-    qa_prompt_str = (
-        "You are an AI that answers questions based on a context. "
-        "CONTEXT:\n{context_str}\n\n"
-        "QUESTION: {query_str}\n\n"
-        "STRICT INSTRUCTION: Provide ONLY the direct, final answer to the QUESTION. "
-        "Do NOT repeat the question. Do NOT include phrases like 'Based on the context'. "
-        "Do NOT include unrelated legal clauses. Just the answer.\n"
-        "ANSWER: "
-    )
-    qa_prompt = PromptTemplate(qa_prompt_str)
+Your role is to strictly answer questions based on the document context provided below.
+
+DOCUMENT CONTEXT:
+-----------------
+{DOCUMENT_CONTEXT}
+-----------------
+
+STRICT RULES:
+1. Provide the exact answer relying ONLY on the document context.
+2. Do NOT invent or make up information. If the answer is not found in the context, say: "I don't have that specific information. Please contact HR."
+3. Be direct, concise, and professional.
+4. Do NOT repeat the question back before answering."""
+
+
+def generate_response(user_input: str, history: list = [], language: str = "English") -> str:
+    """Generate a response using Groq API directly."""
     
-    return index.as_query_engine(
-        similarity_top_k=3,
-        response_mode="simple_summarize", 
-        streaming=True,
-        text_qa_template=qa_prompt
+    lang_instruction = ""
+    if language == "Hindi":
+        lang_instruction = " Always respond in Hindi (Devanagari script)."
+    elif language == "Hinglish":
+        lang_instruction = " Always respond in Hinglish (mix of Hindi and English)."
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT + lang_instruction}
+    ]
+
+    # Add conversation history (last 6 messages for context)
+    for msg in history[-6:]:
+        if msg.get("role") in ["user", "assistant"] and msg.get("content"):
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    # Add current user message
+    messages.append({"role": "user", "content": user_input})
+
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=messages,
+        temperature=0.1,
+        max_tokens=512
     )
+
+    return response.choices[0].message.content
+
+
+def generate_response_stream(user_input: str, history: list = [], language: str = "English"):
+    """Streaming version — yields text chunks."""
+    
+    lang_instruction = ""
+    if language == "Hindi":
+        lang_instruction = " Always respond in Hindi (Devanagari script)."
+    elif language == "Hinglish":
+        lang_instruction = " Always respond in Hinglish (mix of Hindi and English)."
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT + lang_instruction}
+    ]
+
+    for msg in history[-6:]:
+        if msg.get("role") in ["user", "assistant"] and msg.get("content"):
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    messages.append({"role": "user", "content": user_input})
+
+    stream = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=messages,
+        temperature=0.1,
+        max_tokens=512,
+        stream=True
+    )
+
+    for chunk in stream:
+        delta = chunk.choices[0].delta.content
+        if delta:
+            yield delta

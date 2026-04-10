@@ -133,16 +133,25 @@ def _groq_stream(user_input, history, language):
 
     section = _find_best_section(user_input)
     
-    prompt = f"Please analyze the following document context to answer the query.\n\n<DOCUMENT>\n{section}\n</DOCUMENT>\n\nUser Query: {user_input}\n"
-    if language == "Hindi":
-        prompt += "\nAnswer in Hindi."
-    elif language == "Hinglish":
-        prompt += "\nAnswer in Hinglish."
-
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    sys_content = SYSTEM_PROMPT
+    messages = [{"role": "system", "content": sys_content}]
+    
     for msg in history[-4:]:
         if msg.get("role") in ["user", "assistant"] and msg.get("content"):
             messages.append({"role": msg["role"], "content": msg["content"]})
+            
+    prompt = (
+        f"--- START OF RELEVANT DOCUMENT CONTEXT ---\n"
+        f"{section}\n"
+        f"--- END OF RELEVANT DOCUMENT CONTEXT ---\n\n"
+        f"As an intelligent analyst, please answer the user's question based strictly on the document context above. Provide a thoughtful answer.\n"
+        f"User Question: {user_input}"
+    )
+    
+    if language == "Hindi":
+        prompt += "\n(Please respond entirely in Hindi.)"
+    elif language == "Hinglish":
+        prompt += "\n(Please respond entirely in Hinglish.)"
 
     messages.append({"role": "user", "content": prompt})
 
@@ -166,8 +175,6 @@ def _gemini_stream(user_input, history, language):
     section = _find_best_section(user_input)
     sys_content = SYSTEM_PROMPT + _lang_suffix(language)
     
-    gemini_prompt = f"Please analyze the following document context to answer the query.\n\n<DOCUMENT>\n{section}\n</DOCUMENT>\n\nUser Query: {user_input}\n"
-
     gemini_history = []
     for msg in history[-4:]:
         if msg.get("role") and msg.get("content"):
@@ -178,9 +185,18 @@ def _gemini_stream(user_input, history, language):
         model_name=GEMINI_MODEL,
         system_instruction=sys_content
     )
+    
+    prompt = (
+        f"--- START OF RELEVANT DOCUMENT CONTEXT ---\n"
+        f"{section}\n"
+        f"--- END OF RELEVANT DOCUMENT CONTEXT ---\n\n"
+        f"As an intelligent analyst, please answer the user's question based strictly on the document context above. Provide a thoughtful answer.\n"
+        f"User Question: {user_input}"
+    )
+    
     chat = model.start_chat(history=gemini_history)
     response = chat.send_message(
-        gemini_prompt,
+        prompt,
         stream=True,
         generation_config={"temperature": 0.2, "max_output_tokens": 1024}
     )

@@ -12,35 +12,33 @@ if GEMINI_MODEL in ["gemini-1.5-flash", "gemini-1.5-flash-latest"]:
     GEMINI_MODEL = "gemini-2.5-flash"
 KNOWLEDGE_DIR = "knowledge_base"
 
-# ── Document Loader ───────────────────────────────────────────────────
-def load_document_context():
-    """Reads all PDFs in the knowledge base and concatenates their text."""
-    context_text = ""
-    if not os.path.exists(KNOWLEDGE_DIR):
-        print(f"Warning: {KNOWLEDGE_DIR} not found.")
-        return ""
-    
-    for filename in os.listdir(KNOWLEDGE_DIR):
-        if filename.endswith(".pdf"):
-            filepath = os.path.join(KNOWLEDGE_DIR, filename)
-            try:
-                reader = PdfReader(filepath)
-                for page in reader.pages:
-                    text = page.extract_text()
-                    if text:
-                        context_text += text + "\n"
-            except Exception as e:
-                print(f"Error reading {filename}: {e}")
-                
-    # Gemini 1.5 Flash supports 1,000,000 tokens (millions of chars)
-    max_chars = 1000000 
-    if len(context_text) > max_chars:
-        context_text = context_text[:max_chars]
-        
-    return context_text
+# ── Document Context ───────────────────────────────────────────────────
+# Import pre-extracted text (extracted locally, committed to repo)
+# This ensures Railway/HuggingFace deployments have document content
+# even without Git LFS support.
+try:
+    from knowledge_base_text import KNOWLEDGE_BASE_TEXT
+    DOCUMENT_CONTEXT = KNOWLEDGE_BASE_TEXT
+    print(f"[INFO] Loaded knowledge base from pre-extracted text: {len(DOCUMENT_CONTEXT)} chars")
+except ImportError:
+    # Fallback: try reading PDFs at runtime
+    print("[WARN] knowledge_base_text.py not found. Trying to read PDFs directly...")
+    DOCUMENT_CONTEXT = ""
+    if os.path.exists(KNOWLEDGE_DIR):
+        from pypdf import PdfReader
+        for filename in os.listdir(KNOWLEDGE_DIR):
+            if filename.endswith(".pdf"):
+                try:
+                    reader = PdfReader(os.path.join(KNOWLEDGE_DIR, filename))
+                    for page in reader.pages:
+                        text = page.extract_text()
+                        if text:
+                            DOCUMENT_CONTEXT += text + "\n"
+                except Exception as e:
+                    print(f"Error reading {filename}: {e}")
+    if not DOCUMENT_CONTEXT:
+        print("[ERROR] No document context could be loaded!")
 
-# Load document context once on startup
-DOCUMENT_CONTEXT = load_document_context()
 
 # ── System Prompt ───────────────────────────────────────────────────
 SYSTEM_PROMPT = """You are the Kadel Lab Assistant — a professional AI assistant for Kadel Lab Training Centre.

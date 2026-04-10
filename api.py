@@ -8,7 +8,9 @@ import asyncio
 import os
 from src.rag_engine import load_index, get_query_engine, build_index, setup_models
 from src.language_handler import detect_language, translate_to_english, translate_response
-from dotenv import load_dotenv
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import uvicorn
 
 load_dotenv()
 
@@ -150,6 +152,14 @@ async def get_provider():
     llm_name = Settings.llm.__class__.__name__
     return {"provider": llm_name}
 
+# Serve UI static files
+if os.path.exists("ui/dist"):
+    app.mount("/", StaticFiles(directory="ui/dist", html=True), name="ui")
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "Kadel Lab API is running. UI build not found."}
+
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

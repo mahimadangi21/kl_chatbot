@@ -10,7 +10,7 @@ const SyncButton = () => {
     const toastId = toast.loading('Synchronizing Knowledge Base...');
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/sync', { method: 'POST' });
+      const response = await fetch('/sync', { method: 'POST' });
       const data = await response.json();
       
       if (response.ok) {

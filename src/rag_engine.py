@@ -164,38 +164,31 @@ def _groq_stream(user_input, history, language):
 
     section = _find_best_section(user_input)
     
-    sys_content = SYSTEM_PROMPT
-    messages = [{"role": "system", "content": sys_content}]
+    # Using a much cleaner, XML-based boundary which Llama-3 respects better
+    sys_content = SYSTEM_PROMPT + "\n\nYou are provided with a <context> block below. You must answer the users question based ONLY on that context."
     
+    messages = [{"role": "system", "content": sys_content}]
     for msg in history[-4:]:
         if msg.get("role") in ["user", "assistant"] and msg.get("content"):
             messages.append({"role": msg["role"], "content": msg["content"]})
             
-    prompt = (
-        f"--- START OF RELEVANT DOCUMENT CONTEXT ---\n"
-        f"{section}\n"
-        f"--- END OF RELEVANT DOCUMENT CONTEXT ---\n\n"
-        f"As an intelligent analyst, please answer the user's question based strictly on the document context above. Provide a thoughtful answer.\n\n"
-        f"SAFETY LAYER: You must be extremely strict about not guessing. If the answer is not clearly supported by the document, do NOT attempt to generate a smart or approximate answer. "
-        f"Only infer when there is strong contextual similarity. Otherwise, override your response completely and output EXACTLY: "
-        f"\"This information is not available in the provided documents.\"\n"
-        f"Accuracy > Completeness.\n\n"
-        f"User Question: {user_input}"
-    )
+    prompt = f"<context>\n{section}\n</context>\n\nQuestion: {user_input}\nAnswer:"
     
     if language == "Hindi":
-        prompt += "\n(Please respond entirely in Hindi.)"
+        prompt += " (Answer in Hindi)"
     elif language == "Hinglish":
-        prompt += "\n(Please respond entirely in Hinglish.)"
+        prompt += " (Answer in Hinglish)"
 
     messages.append({"role": "user", "content": prompt})
 
     stream = client.chat.completions.create(
         model=GROQ_MODEL,
         messages=messages,
-        temperature=0.2,       
-        max_tokens=1024,        
-        stream=True
+        temperature=0.1,       
+        max_tokens=800,        
+        stream=True,
+        # Stop sequences prevent the model from hallucinating a Q&A session
+        stop=["---", "</context>", "Question:", "User Question:"]
     )
     
     for chunk in stream:

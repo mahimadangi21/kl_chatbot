@@ -120,7 +120,7 @@ const MessageBubble = ({ role, content, model, language }) => {
         <div className="flex flex-col gap-2 flex-1">
           {!isUser && (
              <div className="flex items-center gap-2 px-1 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-               <span className="text-brand-accent">{model?.split(' ')[0] || 'Ollama'}</span>
+               <span className="text-brand-accent">{model?.split(' ')[0] || 'Groq'}</span>
                <span>•</span>
                <span className="opacity-60">{language || 'English'}</span>
              </div>

@@ -3,9 +3,8 @@ import { Menu, Transition } from '@headlessui/react';
 import { Cpu, ChevronDown, Check, Zap, Sparkles, Brain } from 'lucide-react';
 
 const models = [
-  { id: 'ollama', name: 'Ollama (Local)', icon: Brain, color: 'text-blue-500' },
-  { id: 'gemini', name: 'Gemini (Google)', icon: Sparkles, color: 'text-purple-500' },
-  { id: 'grok', name: 'Grok (xAI)', icon: Zap, color: 'text-yellow-500' },
+  { id: 'groq', name: 'Groq (Fast)', icon: Zap, color: 'text-yellow-500' },
+  { id: 'gemini', name: 'Gemini (Accurate)', icon: Sparkles, color: 'text-purple-500' },
 ];
 
 const ModelSelector = ({ selected, onChange }) => {

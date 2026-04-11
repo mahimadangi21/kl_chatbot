@@ -8,7 +8,7 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : {
       language: 'English',
       theme: 'dark',
-      model: 'Grok (xAI)'
+      model: 'Groq (Fast)'
     };
   });
 

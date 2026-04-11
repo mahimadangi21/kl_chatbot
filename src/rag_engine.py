@@ -175,7 +175,11 @@ def _groq_stream(user_input, history, language):
         f"--- START OF RELEVANT DOCUMENT CONTEXT ---\n"
         f"{section}\n"
         f"--- END OF RELEVANT DOCUMENT CONTEXT ---\n\n"
-        f"As an intelligent analyst, please answer the user's question based strictly on the document context above. Provide a thoughtful answer.\n"
+        f"As an intelligent analyst, please answer the user's question based strictly on the document context above. Provide a thoughtful answer.\n\n"
+        f"SAFETY LAYER: You must be extremely strict about not guessing. If the answer is not clearly supported by the document, do NOT attempt to generate a smart or approximate answer. "
+        f"Only infer when there is strong contextual similarity. Otherwise, override your response completely and output EXACTLY: "
+        f"\"This information is not available in the provided documents.\"\n"
+        f"Accuracy > Completeness.\n\n"
         f"User Question: {user_input}"
     )
     
@@ -221,7 +225,11 @@ def _gemini_stream(user_input, history, language):
         f"--- START OF RELEVANT DOCUMENT CONTEXT ---\n"
         f"{section}\n"
         f"--- END OF RELEVANT DOCUMENT CONTEXT ---\n\n"
-        f"As an intelligent analyst, please answer the user's question based strictly on the document context above. Provide a thoughtful answer.\n"
+        f"As an intelligent analyst, please answer the user's question based strictly on the document context above. Provide a thoughtful answer.\n\n"
+        f"SAFETY LAYER: You must be extremely strict about not guessing. If the answer is not clearly supported by the document, do NOT attempt to generate a smart or approximate answer. "
+        f"Only infer when there is strong contextual similarity. Otherwise, override your response completely and output EXACTLY: "
+        f"\"This information is not available in the provided documents.\"\n"
+        f"Accuracy > Completeness.\n\n"
         f"User Question: {user_input}"
     )
     

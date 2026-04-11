@@ -46,7 +46,7 @@ print(f"[INFO] Parsed {len(KB_SECTIONS)} document sections: {list(KB_SECTIONS.ke
 KEYWORD_MAP = {
     'data-ai-ethics-policy.pdf':                    ['ethics', 'ai ethics', 'data ethics', 'principle', 'responsible', 'fairness', 'transparency', 'accountability'],
     'posh-policy.pdf':                              ['posh', 'harassment', 'sexual', 'internal committee', 'complaint', 'respondent', 'victim'],
-    'mahima_dangi_contract.pdf':                    ['contract', 'internship', 'stipend', 'salary', 'notice period', 'joining', 'start date', 'end date', 'mahima', 'dangi', 'payment', 'compensation', 'inr', 'rupee', 'pay'],
+    'mahima_dangi_contract.pdf':                    ['contract', 'internship', 'stipend', 'salary', 'notice period', 'joining', 'start date', 'end date', 'mahima', 'dangi', 'payment', 'compensation', 'inr', 'rupee', 'pay', 'ctc', 'full-time', 'offer'],
     'Email etiquette.pdf':                          ['email', 'etiquette', 'professional email', 'reply', 'subject', 'cc', 'bcc'],
     'Module-4-Data-privacy-and-data-protection.pdf': ['privacy', 'gdpr', 'data protection', 'personal data', 'data breach', 'consent', 'rights', 'regulation'],
 }
@@ -64,13 +64,13 @@ def _find_best_section(user_input: str) -> str:
 
     if best_doc and best_score > 0 and best_doc in KB_SECTIONS:
         content = KB_SECTIONS[best_doc]
-        print(f"[INFO] Routing to: {best_doc} (score={best_score}, len={len(content)})")
-        # Return ONLY this section text — no headers to prevent Groq from echoing
-        return content
+        print(f"[INFO] Routing to: {best_doc} (score={best_score})")
+        # Return a window of the content if it's too large, but for now 3000 chars is safer than 12000
+        return content[:3000]
 
     print("[INFO] No specific section matched — using general fallback")
-    # Use first 12000 chars of all docs as fallback
-    return DOCUMENT_CONTEXT[:12000]
+    # Return a smaller fallback to prevent Groq from getting lost
+    return DOCUMENT_CONTEXT[:2500]
 
 # ── System Prompt ──────────────────────────────────────────────────────
 SYSTEM_PROMPT = """You are an intelligent AI assistant designed to answer strictly based on provided documents (PDFs) with deep reasoning and analysis.
@@ -165,7 +165,7 @@ def _groq_stream(user_input, history, language):
     section = _find_best_section(user_input)
     
     # Using a much cleaner, XML-based boundary which Llama-3 respects better
-    sys_content = SYSTEM_PROMPT + "\n\nYou are provided with a <context> block below. You must answer the users question based ONLY on that context."
+    sys_content = SYSTEM_PROMPT + "\n\nYou are provided with a <context> block below. You must answer the users question based ONLY on that context. Search the context specifically for the subject of the question (e.g. if asked about CTC, ignore dates; if asked about dates, ignore salary)."
     
     messages = [{"role": "system", "content": sys_content}]
     for msg in history[-4:]:
@@ -184,8 +184,8 @@ def _groq_stream(user_input, history, language):
     stream = client.chat.completions.create(
         model=GROQ_MODEL,
         messages=messages,
-        temperature=0.1,       
-        max_tokens=800,        
+        temperature=0.0,       
+        max_tokens=600,        
         stream=True,
         # Stop sequences prevent the model from hallucinating a Q&A session
         stop=["---", "</context>", "Question:", "User Question:"]

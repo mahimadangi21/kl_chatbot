@@ -7,12 +7,23 @@ from typing import List
 import json
 import asyncio
 import os
+import sys
+import io
+
+# Windows Encoding Fix
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 from dotenv import load_dotenv
-from src.rag_engine import generate_response_stream
-try:
-    from langdetect import detect
-except:
-    detect = None
+from src.rag_engine import generate_response_stream, _INDEX, verify_index
+from src.query_handler import QueryHandler
+# Temporarily disabled due to Pydantic v1 / Python 3.14 compatibility issue
+# try:
+#     from langdetect import detect
+# except:
+#     detect = None
+detect = None
 
 load_dotenv()
 
@@ -32,15 +43,7 @@ class ChatRequest(BaseModel):
     manual_lang: str = "English"
     model: str = "Groq"
 
-# ── GREETING BYPASS ──────────────────────────────────────────────────
-GREETINGS = {
-    'hello', 'hi', 'hey', 'hy', 'hlo', 'yo', 'heyo', 'namaste',
-    'hola', 'hi there', 'hello there', 'kaisa ho', 'kya haal', 'kaise ho'
-}
-
-def is_greeting(text: str) -> bool:
-    return text.lower().strip() in GREETINGS or \
-           (any(g in text.lower() for g in GREETINGS) and len(text.split()) < 4)
+# Removed redundant GREETINGS - now handled by QueryHandler
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
@@ -48,19 +51,21 @@ async def chat_endpoint(request: ChatRequest):
         try:
             msg = request.message.strip()
             lang = request.manual_lang
+            provider = request.model.lower()
 
-            if is_greeting(msg):
-                greet_msg = "Hello! 👋 I'm the Kadel Lab Assistant. How can I help you today?"
-                if lang == "Hindi":
-                    greet_msg = "नमस्ते! 👋 मैं Kadel Lab Assistant हूँ। आज मैं आपकी कैसे मदद कर सकता हूँ?"
-                elif lang == "Hinglish":
-                    greet_msg = "Hello! 👋 Main Kadel Lab Assistant hoon. Aaj main aapki kaise help kar sakta hoon?"
-                yield json.dumps({"delta": greet_msg}) + "\n"
+            # Step 1: Preprocess and Intent Detection
+            processed = QueryHandler.process(msg, provider)
+            
+            if processed.get("intent") == "greeting":
+                yield json.dumps({"delta": processed["response"]}) + "\n"
                 return
 
             yield json.dumps({"status": "Thinking..."}) + "\n"
 
-            for chunk in generate_response_stream(msg, request.history, lang, request.model):
+            # Use corrected/expanded query
+            query_to_use = processed.get("corrected", msg)
+
+            for chunk in generate_response_stream(query_to_use, request.history, lang, request.model):
                 yield json.dumps({"delta": chunk}) + "\n"
                 await asyncio.sleep(0.01)
 
@@ -83,5 +88,13 @@ else:
 
 if __name__ == "__main__":
     import uvicorn
+    
+    # Startup Verification
+    if not verify_index(_INDEX):
+        print("\n" + "!"*50)
+        print("WARNING: Index is empty or failed to load!")
+        print("Please add documents to 'knowledge_base/' and Sync Vectors.")
+        print("!"*50 + "\n")
+    
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)

@@ -1,95 +1,77 @@
 import os
+import sys
+import io
+
+# Windows Encoding Fix
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 import gradio as gr
-from src.rag_engine import load_index, get_query_engine, setup_models
-from src.language_handler import translate_to_english, translate_response
+from src.rag_engine import generate_response_stream, verify_index, _INDEX
+from src.query_handler import QueryHandler
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # ── INITIALIZATION ──────────────────────────────────────────────────
-print("Booting Kadel Lab Assistant (ChatGPT Minimal UI)...")
-
-try:
-    index = load_index()
-    query_engine = get_query_engine(index)
-except Exception as e:
-    print(f"Error initializing RAG: {e}")
-    query_engine = None
+print("Booting Kadel Lab Assistant (Chatbot Enhancement Mode)...")
 
 def get_provider_status():
-    provider = os.getenv("LLM_PROVIDER", "ollama")
+    provider = os.getenv("LLM_PROVIDER", "groq")
     model = os.getenv(f"{provider.upper()}_MODEL", "unknown")
     return f"Active: {provider} ({model})"
 
 def get_doc_count():
     folder = "knowledge_base"
     if not os.path.exists(folder): return 0
-    return len([f for f in os.listdir(folder) if f.endswith(('.pdf', '.txt', '.docx'))])
+    return len([f for f in os.listdir(folder) if f.lower().endswith(('.pdf', '.txt', '.docx'))])
 
 # ── CHAT LOGIC ───────────────────────
 
-LANG_MAP = {"English": "en", "Hindi": "hi", "Hinglish": "hi"}
-
-def chat_stream(message, history, manual_lang):
+def chat_stream(message, history, manual_lang, provider):
     if not message.strip():
         yield "", history
         return
         
     try:
-        # Step 1: Append User Message
+        # Step 1: Preprocess and Intent Detection
+        processed = QueryHandler.process(message, provider)
+        if processed.get("intent") == "greeting":
+            history.append({"role": "user", "content": message})
+            history.append({"role": "assistant", "content": processed["response"]})
+            yield "", history
+            return
+
+        # Step 2: Append User Message
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": "<span class='typing-dot'></span><span class='typing-dot'></span><span class='typing-dot'></span>"})
         yield "", history
         
-        user_lang = LANG_MAP.get(manual_lang, "en")
-        
-        english_query = message
-        if user_lang != 'en':
-            english_query = translate_to_english(message, user_lang)
-
-        # Step 3: Predictive RAG Search with System Guardrails
-        system_prompt = "You are Kadel Lab Assistant, an AI helper for Kadel Lab Training Centre. Always respond in English only, regardless of what language the user writes in. Do not switch to any other language unless the user explicitly selects a different language from settings. Keep responses concise, helpful, and friendly."
-        
-        full_query = f"{system_prompt}\n\nUser Query: {english_query}"
-        streaming_response = query_engine.query(full_query)
-        
+        # Step 3: Streaming call to new RAG Engine
         full_response = ""
-        for text in streaming_response.response_gen:
+        # The new engine handles language and provider internally
+        # We use the corrected/expanded query from QueryHandler
+        query_to_use = processed.get("corrected", message)
+        
+        for text in generate_response_stream(query_to_use, history[:-2], manual_lang, provider):
             full_response += text
             history[-1]["content"] = full_response
             yield "", history
             
-        # Step 4: Finalize & Format
-        if user_lang != 'en':
-            history[-1]["content"] = full_response + " <span class='typing-dot'></span><span class='typing-dot'></span><span class='typing-dot'></span>"
-            yield "", history
-            final_answer = translate_response(full_response, user_lang)
-            history[-1]["content"] = final_answer
-            yield "", history
-            
     except Exception as e:
+        print(f"Chat Error: {e}")
         history.append({"role": "assistant", "content": f"An error occurred: {str(e)}"})
         yield "", history
 
-def change_provider(new_provider):
-    global query_engine
-    try:
-        # Re-setup models with the new provider
-        setup_models(new_provider.lower())
-        # Refresh query engine to use the new LLM
-        query_engine = get_query_engine(index)
-        # Update env for consistency (optional)
-        os.environ["LLM_PROVIDER"] = new_provider.lower()
-        return f"Provider switched to: {new_provider}"
-    except Exception as e:
-        return f"Failed to switch: {str(e)}"
+def change_provider_env(new_provider):
+    os.environ["LLM_PROVIDER"] = new_provider.lower()
+    return f"Provider switched to: {new_provider}"
 
-def sync_knowledge():
-    global index, query_engine
+def sync_knowledge_trigger():
     try:
         from src.rag_engine import build_index
-        index = build_index()
-        query_engine = get_query_engine(index)
+        build_index()
         return f"Database Refreshed ({get_doc_count()} docs)"
     except Exception as e:
         return f"Sync failed: {str(e)}"
@@ -351,8 +333,8 @@ def launch_ui():
                     with gr.Accordion("⚙️ Settings", open=False, elem_id="settings-accordion"):
                         manual_lang = gr.Dropdown(choices=["English", "Hindi", "Hinglish"], value="English", label="Language")
                         provider_dropdown = gr.Dropdown(
-                            choices=["Ollama", "Groq", "Gemini"], 
-                            value=os.getenv("LLM_PROVIDER", "ollama").capitalize(), 
+                            choices=["Groq", "Gemini"], 
+                            value=os.getenv("LLM_PROVIDER", "groq").capitalize(), 
                             label="LLM Provider"
                         )
                         sync_btn = gr.Button("Sync Vectors", variant="secondary", size="sm")
@@ -403,7 +385,7 @@ def launch_ui():
         
         # Provider change handling
         def update_provider_ui(provider):
-            msg = change_provider(provider)
+            msg = change_provider_env(provider)
             gr.Info(msg)
             return f'<div id="provider-status" style="font-size: 11px; color: #666; margin-top: 8px;">Active: {provider.lower()}</div>'
 
@@ -414,27 +396,34 @@ def launch_ui():
             return gr.update(visible=False)
 
         # Submit Flow
-        msg.submit(hide_chips_ui, None, quick_chips).then(chat_stream, [msg, chatbot, manual_lang], [msg, chatbot])
-        send_btn.click(hide_chips_ui, None, quick_chips).then(chat_stream, [msg, chatbot, manual_lang], [msg, chatbot])
+        msg.submit(hide_chips_ui, None, quick_chips).then(chat_stream, [msg, chatbot, manual_lang, provider_dropdown], [msg, chatbot])
+        send_btn.click(hide_chips_ui, None, quick_chips).then(chat_stream, [msg, chatbot, manual_lang, provider_dropdown], [msg, chatbot])
         
-        sync_btn.click(sync_knowledge, None, status_text)
+        sync_btn.click(sync_knowledge_trigger, None, status_text)
         
         # Quick Chips Flow
         def direct_chip_submit(query):
             return query, gr.update(visible=False)
             
         q1.click(lambda: direct_chip_submit("What courses are currently available?"), None, [msg, quick_chips]).then(
-            chat_stream, [msg, chatbot, manual_lang], [msg, chatbot])
+            chat_stream, [msg, chatbot, manual_lang, provider_dropdown], [msg, chatbot])
         q2.click(lambda: direct_chip_submit("Show me the upcoming training schedules."), None, [msg, quick_chips]).then(
-            chat_stream, [msg, chatbot, manual_lang], [msg, chatbot])
+            chat_stream, [msg, chatbot, manual_lang, provider_dropdown], [msg, chatbot])
         q3.click(lambda: direct_chip_submit("What is the fee structure for available courses?"), None, [msg, quick_chips]).then(
-            chat_stream, [msg, chatbot, manual_lang], [msg, chatbot])
+            chat_stream, [msg, chatbot, manual_lang, provider_dropdown], [msg, chatbot])
         q4.click(lambda: direct_chip_submit("What certifications do you offer?"), None, [msg, quick_chips]).then(
-            chat_stream, [msg, chatbot, manual_lang], [msg, chatbot])
+            chat_stream, [msg, chatbot, manual_lang, provider_dropdown], [msg, chatbot])
 
     return demo
 
 if __name__ == "__main__":
+    # Startup Verification
+    if not verify_index(_INDEX):
+        print("\n" + "!"*50)
+        print("WARNING: Index is empty or failed to load!")
+        print("Please add documents to 'knowledge_base/' and Sync Vectors.")
+        print("!"*50 + "\n")
+    
     demo = launch_ui()
     # Note: gradio handles theme overrides, but using simple gr.themes.Default removes unwanted global overrides.
     demo.launch(share=True)

@@ -1,0 +1,19 @@
+2026-04-12 15:43:13,967 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-12 15:43:15,147 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-12 15:43:27,529 - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-04-12 15:43:27,834 - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2026-04-12 15:43:28,349 - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-04-12 15:43:29,635 - HTTP Request: GET https://api.gradio.app/v3/tunnel-request "HTTP/1.1 200 OK"
+2026-04-12 15:44:25,691 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-12 15:44:33,303 - Loading all indices.
+2026-04-12 15:44:34,443 - HTTP Request: GET http://127.0.0.1:7861/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-04-12 15:44:34,477 - HTTP Request: HEAD http://127.0.0.1:7861/ "HTTP/1.1 200 OK"
+2026-04-12 15:44:36,195 - HTTP Request: GET https://api.gradio.app/v3/tunnel-request "HTTP/1.1 200 OK"
+2026-04-12 15:44:36,198 - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-04-12 15:45:51,069 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-12 15:45:58,303 - Loading all indices.
+2026-04-12 15:55:56,196 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-12 16:02:59,003 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-12 16:03:06,738 - Loading all indices.
+2026-04-12 16:03:56,092 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-12 16:04:25,403 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

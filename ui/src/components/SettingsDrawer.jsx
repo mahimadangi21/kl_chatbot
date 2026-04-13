@@ -10,7 +10,7 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-const SettingsDrawer = ({ isOpen, onClose, settings, setSettings }) => {
+const SettingsDrawer = ({ isOpen, onClose, settings, setSettings, isSynced, setIsSynced }) => {
   const isDark = settings.theme === 'dark';
 
   return (
@@ -102,11 +102,25 @@ const SettingsDrawer = ({ isOpen, onClose, settings, setSettings }) => {
               </section>
 
               <section className="space-y-4">
-                 <div className="flex items-center justify-between px-1">
-                  <label className="text-[11px] font-black text-gray-500 uppercase tracking-[0.2em]">RAG Engine</label>
-                  <RefreshCw className="w-3.5 h-3.5 text-brand-accent" />
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[11px] font-black text-gray-500 uppercase tracking-[0.2em]">Knowledge Base</label>
+                  <RefreshCw className={cn("w-3.5 h-3.5 text-brand-accent", !isSynced && "animate-spin")} />
                 </div>
-                <SyncButton />
+                <div className={cn(
+                  "p-4 rounded-2xl border flex items-center justify-between transition-all",
+                  isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"
+                )}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-2 h-2 rounded-full", isSynced ? "bg-green-500" : "bg-brand-accent animate-pulse")} />
+                    <span className={cn("text-sm font-medium", isDark ? "text-gray-300" : "text-brand-bg")}>
+                      {isSynced ? "Engine Ready" : "Sync Required"}
+                    </span>
+                  </div>
+                  <SyncButton 
+                    onComplete={() => setIsSynced(true)} 
+                    variant={isSynced ? "minimal" : "full"}
+                  />
+                </div>
               </section>
 
               <section className="space-y-4">

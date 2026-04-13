@@ -65,7 +65,7 @@ def get_llm(provider="gemini"):
 def build_index():
     kb_path = DATA_DIR
     # Restrict to these specific PDFs as requested
-    ALLOWED_FILES = ["Email etiquette.pdf", "mahima_dangi_contract.pdf", "data-ai-ethics-policy.pdf"]
+    ALLOWED_FILES = ["Email etiquette.pdf", "mahima_dangi_contract.pdf", "data-ai-ethics-policy.pdf", "software_engineering_tutorial.pdf"]
     files = [f for f in os.listdir(kb_path) if f in ALLOWED_FILES]
     print(f"Restricted Files in {kb_path}: {files}")
     
@@ -139,16 +139,15 @@ _INDEX = load_or_build_index()
 # ── PROMPT ENGINEERING (Step 2) ───────────────────────────────────
 
 QA_PROMPT_TMPL = (
-    "You are an intelligent document assistant. Your job is to answer questions ONLY based on the provided document content.\n\n"
-    "## CORE RULES:\n"
-    "1. Read the provided CONTEXT thoroughly.\n"
-    "2. Answer ONLY from the document content provided.\n"
-    "3. If the answer is NOT in the CONTEXT, say exactly: \"This information is not mentioned in the provided document.\"\n"
-    "4. Do NOT suggest contacting HR, managers, or external portals.\n"
-    "5. For fact questions (dates, names, numbers) -> give SHORT answer ONLY (1-2 lines).\n"
-    "6. For policy questions -> give a brief 3-4 line summary. \n"
-    "7. Never use bullet points unless necessary.\n"
-    "8. Never add unnecessary disclaimers or suggestions.\n\n"
+    "You are an intelligent document assistant for the Kadel Lab Training Centre. Your job is to answer questions using the provided context.\n\n"
+    "## OPERATIONAL GUIDELINES:\n"
+    "1. Answer based ONLY on the provided CONTEXT. Do not use outside knowledge.\n"
+    "2. If the answer is not in the context, politely state: \"I could not find information about this in the training documents.\"\n"
+    "3. For DEFINITIONS (e.g. 'What is email etiquette?'): Provide a comprehensive but concise explanation based on the text.\n"
+    "4. For POLICIES or RULES: Summarize clearly in 3-5 sentences.\n"
+    "5. For FACTUAL/SHORT questions: Be direct and give only the specific detail (1-2 lines).\n"
+    "6. Do NOT use introductory phrases like 'According to the document...' or 'Based on the references...'.\n"
+    "7. Maintain a professional, helpful tone.\n\n"
     "CONTEXT:\n"
     "---------------------\n"
     "{context_str}\n"
@@ -242,11 +241,12 @@ def call_gemini_direct(system_instruction: str, user_prompt: str) -> str:
 
 def smart_retrieve(query: str, index):
     """Retrieves nodes and filters them to provide a balanced context from all relevant documents."""
-    # Step 1: Broad retrieval across all documents
-    retriever = index.as_retriever(similarity_top_k=10)
+    # Step 1: Broad retrieval across all documents - Increased to 15 for better coverage
+    retriever = index.as_retriever(similarity_top_k=15)
     raw_nodes = retriever.retrieve(query)
     
     if not raw_nodes:
+        print(f"[DEBUG] No nodes found for query: {query}")
         return []
 
     # Sort by score descending
@@ -254,16 +254,16 @@ def smart_retrieve(query: str, index):
                    key=lambda x: x.score if hasattr(x, 'score') and x.score is not None else 0, 
                    reverse=True)
     
-    # Remove the strict "Single Document" concentration to allow multi-document answers
+    print(f"[DEBUG] Retrieved {len(nodes_sorted)} nodes. Best score: {nodes_sorted[0].score if nodes_sorted else 'N/A'}")
     
-    # Step 2: Complexity Check
+    # Step 2: Adaptive Context Window
     word_count = len(query.split())
-    # If it's a very simple fact check, still give at least 2 chunks to be safe
-    if word_count <= 4 or any(w in query.lower() for w in ["name", "date", "amt", "salary"]):
-        return nodes_sorted[:2]
+    # For complex/definition queries or general lookups, provide more context (up to 6 chunks)
+    if word_count > 4 or any(w in query.lower() for w in ["what", "explain", "describe", "policy", "etiquette", "rules"]):
+        return nodes_sorted[:6]
         
-    # For general questions, provide up to 4 chunks to ensure we don't miss info across PDFs
-    return nodes_sorted[:4]
+    # For very simple fact checks, provide 3 chunks
+    return nodes_sorted[:3]
 
 def build_smart_context(nodes: list, query: str) -> str:
     """Provides full relevant chunks with clear source markers to prevent data loss while keeping context manageable."""
@@ -271,11 +271,12 @@ def build_smart_context(nodes: list, query: str) -> str:
     
     for i, node in enumerate(nodes):
         text = node.node.get_content() if hasattr(node.node, 'get_content') else node.node.text
+        source = node.node.metadata.get('file_name', 'Unknown Source')
         if not text:
             continue
             
         clean_text = text.replace('\n', ' ').strip()
-        context_parts.append(f"REFERENCE {i+1}:\n{clean_text}")
+        context_parts.append(f"REFERENCE {i+1} [Source: {source}]:\n{clean_text}")
         
     return "\n\n".join(context_parts)
 
@@ -315,16 +316,29 @@ def generate_response_stream(user_input: str, history: List[dict] = [], manual_l
         context = build_smart_context(nodes, query_to_use)
         
         # Step 4: Build Semantic Intent Assistant Prompt (Precise & Accurate)
-        system_prompt = f"""You are a strict Data Extraction Assistant for Kadel Lab Training Centre.
-Your ONLY mission is to extract the EXACT answer from the provided reference documents.
+        
+        # Language specific "Not found" messages
+        not_found_msgs = {
+            "English": "I could not find this information in the provided document.",
+            "Hindi": "मुझे प्रदान किए गए दस्तावेज़ में यह जानकारी नहीं मिली।",
+            "Hinglish": "Mujhe provided document mein yeh information nahi mili."
+        }
+        not_found_msg = not_found_msgs.get(manual_lang, not_found_msgs["English"])
 
-RULES:
-1. {q_info['instruction']} 
-2. DIRECT ANSWER ONLY: Provide ONLY the specific value requested. 
-3. NO DISCLAIMERS: Never say "Based on the document" or "I found...". 
-4. NO QUESTIONS: Never repeat the user's question or generate your own response headers.
-5. NO EXPLANATIONS: Do not explain what you are doing or what is not in the text.
-6. IF NOT FOUND: Say "I could not find this information in the records." and nothing else.
+        system_prompt = f"""You are the Kadel Lab Training Assistant.
+Your mission is to provide accurate and helpful information based on the provided training documents.
+
+STRICT LANGUAGE RULE:
+- The user has selected {manual_lang} as their preferred language.
+- You MUST answer in {manual_lang}.
+- If Hindi, use Devanagari. If Hinglish, use Roman script.
+
+CORE INSTRUCTIONS:
+1. {q_info['instruction']}
+2. Answer based ONLY on the Reference Content below. 
+3. If information is missing, say: "{not_found_msg}".
+4. Do NOT use introductory filler like "According to REFERENCE 1...". Give the answer directly.
+5. Provide a professional and constructive tone.
 
 REFERENCE CONTENT:
 {context}"""

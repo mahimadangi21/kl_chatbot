@@ -180,3 +180,62 @@
 2026-04-13 11:01:18,291 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
 2026-04-13 11:04:09,408 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
 2026-04-13 11:04:38,521 - Loading all indices.
+2026-04-13 11:04:40,553 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 11:05:12,311 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 11:38:31,514 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 11:38:35,677 - 2 prompts are loaded, with the keys: ['query', 'text']
+2026-04-13 11:40:22,702 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 11:40:26,510 - 2 prompts are loaded, with the keys: ['query', 'text']
+2026-04-13 11:40:28,429 - Loading all indices.
+2026-04-13 11:40:29,152 - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-04-13 11:40:29,186 - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2026-04-13 11:40:30,913 - HTTP Request: GET https://api.gradio.app/v3/tunnel-request "HTTP/1.1 200 OK"
+2026-04-13 11:40:30,924 - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-04-13 12:00:44,853 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 12:00:48,851 - 2 prompts are loaded, with the keys: ['query', 'text']
+2026-04-13 12:00:51,867 - Loading all indices.
+2026-04-13 12:00:52,851 - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-04-13 12:00:52,891 - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2026-04-13 12:00:53,212 - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-04-13 12:00:54,047 - HTTP Request: GET https://api.gradio.app/v3/tunnel-request "HTTP/1.1 200 OK"
+2026-04-13 12:16:39,477 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 12:16:47,513 - Loading all indices.
+2026-04-13 12:17:20,695 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 12:17:27,247 - Loading all indices.
+2026-04-13 12:18:42,975 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 12:18:49,727 - Loading all indices.
+2026-04-13 12:18:53,212 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 12:18:57,328 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 12:19:48,089 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 12:19:55,060 - Loading all indices.
+2026-04-13 12:20:08,457 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 12:20:09,229 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 12:20:10,072 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 12:21:19,185 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 12:21:30,275 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 0e392323-795b-4477-ace9-58207fbe35c8)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 12:21:30,276 - Retrying in 1s [Retry 1/5].
+2026-04-13 12:21:31,290 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: dd3f6105-682a-43df-ad79-0541eb26bb13)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 12:21:31,290 - Retrying in 2s [Retry 2/5].
+2026-04-13 12:21:33,293 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 62234e53-81c5-426e-82ef-29c50e46060d)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 12:21:33,294 - Retrying in 4s [Retry 3/5].
+2026-04-13 12:21:42,366 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 8134e2f6-ef2b-44e4-8ab5-adc7489c3095)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 12:21:42,366 - Retrying in 8s [Retry 4/5].
+2026-04-13 12:21:50,369 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 8b3853ab-8a32-4ab4-bf9c-47b59f572bc4)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 12:21:50,369 - Retrying in 8s [Retry 5/5].
+2026-04-13 12:21:58,371 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: b449b7cc-07b6-45ed-9ade-9a72ae7d041c)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 12:21:58,374 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: ccb4315a-d1f0-4d36-9cf3-5c3d683527e9)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 12:21:58,374 - Retrying in 1s [Retry 1/5].
+2026-04-13 12:21:59,377 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: b4bdb434-f603-4aeb-84bc-e0e617e43c9d)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 12:21:59,377 - Retrying in 2s [Retry 2/5].
+2026-04-13 12:22:01,379 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 0cd53595-87e2-4619-b98f-aa8a048f3c9e)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 12:22:01,379 - Retrying in 4s [Retry 3/5].
+2026-04-13 12:22:29,504 - Loading all indices.
+2026-04-13 12:22:30,539 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 12:58:57,574 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 12:59:34,521 - Loading all indices.
+2026-04-13 13:01:08,642 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 13:01:15,345 - Loading all indices.
+2026-04-13 13:13:52,871 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:14:29,495 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:14:52,451 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:16:06,099 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

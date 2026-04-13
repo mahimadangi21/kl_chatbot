@@ -39,20 +39,20 @@ function cn(...inputs) {
 
 const Sidebar = ({ history, activeId, onNew, onSelect, onClear, isSidebarOpen }) => (
   <aside className={cn(
-    "bg-brand-sidebar dark:bg-brand-sidebar bg-light-sidebar border-r border-white/5 dark:border-white/5 border-gray-200 flex flex-col overflow-hidden transition-all duration-300 shrink-0",
+    "dark:bg-brand-sidebar bg-[#f8fafc] border-r dark:border-white/5 border-gray-200 flex flex-col overflow-hidden transition-all duration-300 shrink-0",
     isSidebarOpen ? "w-[280px]" : "w-0 opacity-0"
   )}>
     <div className="p-4 flex flex-col h-full min-w-[280px]">
       <button 
         onClick={onNew}
-        className="flex items-center gap-3 px-4 py-3 bg-white/5 dark:bg-white/5 bg-gray-100 border border-white/10 dark:border-white/10 border-gray-300 rounded-xl hover:bg-brand-accent/5 transition-all mb-6 dark:text-white text-brand-bg font-medium group active:scale-95 shadow-sm"
+        className="flex items-center gap-3 px-4 py-3 dark:bg-white/5 bg-white border dark:border-white/10 border-gray-200 rounded-xl hover:bg-brand-accent/5 transition-all mb-6 dark:text-white text-[#1e293b] font-semibold group active:scale-95 shadow-sm"
       >
         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300 text-brand-accent" />
         New Chat
       </button>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 mb-4 pr-1">
-        <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-3 mb-3 block">Conversations</label>
+        <label className="text-[10px] font-black dark:text-gray-500 text-gray-400 uppercase tracking-[0.2em] px-3 mb-3 block">Conversations</label>
         {history.map((chat) => (
           <button
             key={chat.id}
@@ -61,7 +61,7 @@ const Sidebar = ({ history, activeId, onNew, onSelect, onClear, isSidebarOpen })
               "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative break-all text-left",
               activeId === chat.id 
                 ? "bg-brand-accent/10 dark:text-white text-brand-accent ring-1 ring-brand-accent/20" 
-                : "text-gray-500 hover:bg-gray-200 dark:hover:bg-white/5"
+                : "dark:text-gray-500 text-gray-600 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-black"
             )}
           >
             <MessageSquare className="w-4 h-4 flex-shrink-0" />
@@ -130,7 +130,7 @@ const MessageBubble = ({ role, content, model, language }) => {
             "p-4 px-5 rounded-2xl relative shadow-sm transition-all",
             isUser 
               ? "bg-brand-user text-white rounded-tr-none shadow-brand-accent/20" 
-              : "bg-brand-bot dark:bg-brand-bot bg-light-chat dark:text-gray-200 text-brand-bg border border-gray-100 dark:border-white/5 rounded-tl-none shadow-xl"
+              : "bg-brand-bot dark:bg-brand-bot bg-[#ffffff] dark:text-gray-200 text-brand-bg border border-gray-200 dark:border-white/5 rounded-tl-none shadow-sm hover:shadow-md"
           )}>
             <div className="markdown-content">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -168,9 +168,24 @@ function App() {
   
   const [history, setHistory] = useState(() => JSON.parse(localStorage.getItem('kl_history') || '[]'));
   const [activeChatId, setActiveChatId] = useState(null);
+  const [isSynced, setIsSynced] = useState(true); // Default to true to hide by default
 
   const scrollRef = useRef(null);
   const { isListening, transcript, startListening, stopListening, setTranscript } = useSpeechToText();
+
+  useEffect(() => {
+    // Check sync status on load
+    const checkSync = async () => {
+      try {
+        const res = await fetch('/sync/status');
+        const data = await res.json();
+        setIsSynced(data.synced);
+      } catch (e) {
+        console.error("Failed to check sync status:", e);
+      }
+    };
+    checkSync();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('kl_history', JSON.stringify(history));
@@ -186,6 +201,15 @@ function App() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    // Sync dark class with settings
+    if (settings.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings.theme]);
 
   const onNew = () => {
     setMessages([]);
@@ -330,6 +354,8 @@ function App() {
         onClose={() => setIsSettingsOpen(false)} 
         settings={settings}
         setSettings={setSettings}
+        isSynced={isSynced}
+        setIsSynced={setIsSynced}
       />
 
       <Sidebar 
@@ -349,11 +375,11 @@ function App() {
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg transition-all"
             >
-              <MenuIcon className="w-5 h-5 text-gray-500" />
+              <MenuIcon className="w-5 h-5 dark:text-gray-500 text-gray-600 hover:text-black transition-colors" />
             </button>
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-accent animate-pulse" />
-              <h1 className="font-bold text-sm tracking-tight dark:text-white text-brand-bg">Kadel Lab Assistant</h1>
+              <h1 className={cn("font-bold text-sm tracking-tight", settings.theme === 'dark' ? "text-white" : "text-slate-900")}>Kadel Labs Assistant</h1>
             </div>
           </div>
           
@@ -370,7 +396,7 @@ function App() {
               onClick={() => setIsSettingsOpen(true)}
               className="p-2.5 hover:bg-gray-200 dark:hover:bg-white/5 rounded-xl text-gray-500 hover:text-brand-accent transition-all active:scale-90"
              >
-               <Settings className="w-5 h-5" />
+               <Settings className="w-5 h-5 dark:text-gray-500 text-gray-600 hover:text-brand-accent" />
              </button>
           </div>
         </header>
@@ -388,8 +414,8 @@ function App() {
                   <div className="w-20 h-20 bg-brand-accent/10 rounded-3xl flex items-center justify-center mb-8 border border-brand-accent/20 animate-float shadow-2xl">
                     <Brain className="w-10 h-10 text-brand-accent" />
                   </div>
-                  <h2 className="text-3xl font-black mb-4 dark:text-white text-brand-bg">Ready to Help</h2>
-                  <p className="text-gray-500 max-w-sm mx-auto mb-10 font-medium">
+                  <h2 className="text-3xl font-black mb-4 dark:text-white text-[#1e293b]">Ready to Help</h2>
+                  <p className="dark:text-gray-400 text-gray-500 max-w-sm mx-auto mb-10 font-medium">
                     Select a model above and start exploring your training materials in multiple languages.
                   </p>
                 </motion.div>
@@ -405,7 +431,7 @@ function App() {
           <div className="max-w-[780px] mx-auto">
             <form 
               onSubmit={handleSubmit}
-              className="bg-light-chat dark:bg-[#1a2333] border border-gray-200 dark:border-white/10 rounded-3xl shadow-2xl flex items-end gap-2 p-1.5 focus-within:ring-4 focus-within:ring-brand-accent/10 transition-all"
+              className="bg-white dark:bg-[#1a2333] border border-gray-200 dark:border-white/10 rounded-3xl shadow-xl flex items-end gap-2 p-1.5 focus-within:ring-4 focus-within:ring-brand-accent/10 transition-all"
             >
               <textarea 
                 value={input}
@@ -418,7 +444,7 @@ function App() {
                 }}
                 rows={1}
                 placeholder={`Ask ${settings.model.split(' ')[0]} in ${settings.language}...`}
-                className="flex-1 bg-transparent border-none dark:text-white text-brand-bg focus:ring-0 p-4 max-h-[220px] transition-all"
+                className="flex-1 bg-transparent border-none dark:text-white text-[#1e293b] dark:placeholder-gray-500 placeholder-gray-400 focus:ring-0 p-4 max-h-[220px] transition-all"
               />
               <div className="flex items-center gap-2 pr-2 pb-2">
                 <button 

@@ -9,14 +9,16 @@
   --color-brand-text: #e5e7eb;
   --color-brand-accent: #3b82f6;
   
-  /* Light Theme Overrides */
-  --color-light-bg: #f8fafc;
-  --color-light-sidebar: #ffffff;
+  /* Light Theme Overrides - Improved Aesthetics */
+  --color-light-bg: #ffffff;
+  --color-light-sidebar: #f8fafc;
   --color-light-chat: #ffffff;
   --color-light-user: #2563eb;
   --color-light-bot: #f1f5f9;
-  --color-light-text: #0f172a;
+  --color-light-text: #1e293b;
   --color-light-border: #e2e8f0;
+  --color-light-accent: #3b82f6;
+  --color-light-card: #ffffff;
 }
 
 @layer base {

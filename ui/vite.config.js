@@ -11,6 +11,7 @@ export default defineConfig({
       '/health': { target: 'http://127.0.0.1:8000', changeOrigin: true },
       '/transcribe': { target: 'http://127.0.0.1:8000', changeOrigin: true },
       '/sync': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/sync/status': { target: 'http://127.0.0.1:8000', changeOrigin: true },
       '/provider': { target: 'http://127.0.0.1:8000', changeOrigin: true },
     }
   }

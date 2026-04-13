@@ -1,4 +1,5 @@
 import os
+import re
 # import spacy
 from spellchecker import SpellChecker
 from groq import Groq
@@ -96,23 +97,36 @@ class QueryHandler:
         return "rag"
 
     @staticmethod
-    def handle_greeting(query: str) -> str:
+    def handle_greeting(query: str, language: str = "English") -> str:
         greetings_responses = {
-            "hello": "Hello! I am the Kadel Lab Training Assistant. I can help you with course information, schedules, policies, and fees. What would you like to know?",
-            "hi": "Hi there! How can I help you with your training center queries today?",
-            "how are you": "I am working well and ready to help! Ask me anything about courses, schedules, or training policies.",
-            "what can you do": "I can answer questions about: courses available, training schedules, fees, attendance policies, trainee guidelines, and contract details. Just ask!",
-            "who are you": "I am the Kadel Lab Training Center Assistant, powered by AI. I answer questions based on official training documents.",
-            "help": "I can help with: course information, training schedules, fees and payments, attendance policies, contract details, and trainee guidelines.",
-            "namaste": "Namaste! Main Kadel Lab assistant hoon. Main aapki kya sahayata kar sakta hoon?"
+            "English": {
+                "hello": "Hello! I am the Kadel Lab Training Assistant. I can help you with course information, schedules, policies, and fees. What would you like to know?",
+                "hi": "Hi there! How can I help you with your training center queries today?",
+                "namaste": "Hello! I am the Kadel Lab Training Assistant. How can I help you?",
+                "default": "Hello! I am the Training Center Assistant. How can I help you today?"
+            },
+            "Hindi": {
+                "hello": "नमस्ते! मैं काडेल लैब ट्रेनिंग असिस्टेंट हूँ। मैं कोर्स की जानकारी, शेड्यूल, पॉलिसी और फीस में आपकी मदद कर सकता हूँ। आप क्या जानना चाहेंगे?",
+                "hi": "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?",
+                "namaste": "नमस्ते! मैं काडेल लैब असिस्टेंट हूँ। मैं आपकी क्या सहायता कर सकता हूँ?",
+                "default": "नमस्ते! मैं ट्रेनिंग सेंटर असिस्टेंट हूँ। मैं आपकी क्या मदद कर सकता हूँ?"
+            },
+            "Hinglish": {
+                "hello": "Hello! Main Kadel Lab Training Assistant hoon. Main aapki course info, schedule, policy aur fees mein help kar sakta hoon. Aap kya jaanna chahenge?",
+                "hi": "Hi! Main aapki kaise help kar sakta hoon?",
+                "namaste": "Namaste! Main Kadel Labs Assistant hoon. Main aapki kya help kar sakta hoon?",
+                "default": "Hello! Main Training Center Assistant hoon. Main aapki kaise help kar sakta hoon?"
+            }
         }
         
         query_lower = query.lower().strip()
-        for key, response in greetings_responses.items():
+        lang_responses = greetings_responses.get(language, greetings_responses["English"])
+        
+        for key, response in lang_responses.items():
             if key in query_lower:
                 return response
         
-        return "Hello! I am the Training Center Assistant. How can I help you today?"
+        return lang_responses["default"]
 
     @staticmethod
     def spell_check(query: str) -> str:
@@ -145,25 +159,54 @@ class QueryHandler:
             return f"{query} date start 2026 duration months"
         return query
 
+    @staticmethod
+    def is_hindi(text: str) -> bool:
+        """Detect if the text contains Hindi (Devanagari) characters."""
+        return bool(re.search(r'[\u0900-\u097F]', text))
+
     @classmethod
-    def process(cls, query: str, provider: str = "groq") -> dict:
+    def translate_to_english(cls, text: str, provider: str = "gemini") -> str:
+        """Translate Hindi/Hinglish to English for better document retrieval."""
+        system_prompt = "You are a translator. Translate the following Hindi or Hinglish text to clear English for a search query. Only return the translation, nothing else."
+        try:
+            if provider.lower() == "groq":
+                from src.llm_manager import LLMManager
+                return LLMManager.call_groq_direct(system_prompt, text).strip()
+            else:
+                from src.rag_engine import call_gemini_direct
+                return call_gemini_direct(system_prompt, text).strip()
+        except:
+            return text
+
+    @classmethod
+    def process(cls, query: str, provider: str = "groq", language: str = "English") -> dict:
         intent = cls.detect_intent(query)
         
+        is_hindi_query = cls.is_hindi(query)
+        
         if intent == "greeting":
-            return {"intent": "greeting", "response": cls.handle_greeting(query)}
+            return {"intent": "greeting", "response": cls.handle_greeting(query, language), "is_hindi": is_hindi_query}
             
         corrected = cls.spell_check(query)
         
+        # If Hindi, translate for retrieval
+        retrieval_query = corrected
+        if is_hindi_query:
+            print(f"[LANG] Hindi detected. Translating for retrieval...")
+            retrieval_query = cls.translate_to_english(corrected, provider)
+            print(f"[LANG] Translated query: {retrieval_query}")
+
         if intent == "short_query" or intent == "rag":
-            corrected = cls.expand_query(corrected)
+            retrieval_query = cls.expand_query(retrieval_query)
             
-        keywords = cls.extract_keywords(corrected)
-        q_type = cls.detect_question_type(corrected)
+        keywords = cls.extract_keywords(retrieval_query)
+        q_type = cls.detect_question_type(retrieval_query)
         
         return {
             "intent": intent,
             "type_info": q_type,
             "original": query,
-            "corrected": corrected,
+            "corrected": retrieval_query, # Use the English version for retrieval
+            "is_hindi": is_hindi_query,
             "keywords": keywords
         }

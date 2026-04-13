@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── INITIALIZATION ──────────────────────────────────────────────────
-print("Booting Kadel Lab Assistant (Chatbot Enhancement Mode)...")
+print("Booting Kadel Labs Assistant (Chatbot Enhancement Mode)...")
 
 def get_provider_status():
     provider = os.getenv("LLM_PROVIDER", "groq")
@@ -36,7 +36,7 @@ def chat_stream(message, history, manual_lang, provider):
         
     try:
         # Step 1: Preprocess and Intent Detection
-        processed = QueryHandler.process(message, provider)
+        processed = QueryHandler.process(message, provider, manual_lang)
         if processed.get("intent") == "greeting":
             history.append({"role": "user", "content": message})
             history.append({"role": "assistant", "content": processed["response"]})
@@ -315,7 +315,7 @@ body {
 
 def launch_ui():
     # Pass CSS inside Blocks for Gradio 4.x/5.x compatibility in latest versions
-    with gr.Blocks(title="Kadel Lab Assistant", theme=gr.themes.Default(), css=chatgpt_css) as demo:
+    with gr.Blocks(title="Kadel Labs Assistant", theme=gr.themes.Default(), css=chatgpt_css) as demo:
         
         # ── HEADER ──
         with gr.Row(elem_classes="top-nav"):
@@ -324,7 +324,7 @@ def launch_ui():
                     <div style="width: 32px; height: 32px; background: #ececec; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #212121; font-weight: bold; font-size: 14px;">
                         KL
                     </div>
-                    <span style="font-weight: 600; font-size: 16px; color: #ececec;">Kadel Lab Assistant</span>
+                    <span style="font-weight: 600; font-size: 16px; color: #ececec;">Kadel Labs Assistant</span>
                 </div>
             """)
             with gr.Column(elem_classes="settings-col", min_width=250):
@@ -365,7 +365,7 @@ def launch_ui():
             with gr.Row(elem_id="input-section", variant="compact"):
                 with gr.Column(scale=9, min_width=250):
                     msg = gr.Textbox(
-                        placeholder="Ask Kadel Lab Assistant...",
+                        placeholder="Ask Kadel Labs Assistant...",
                         show_label=False,
                         container=False,
                         lines=1,
@@ -374,7 +374,7 @@ def launch_ui():
                 with gr.Column(scale=1, min_width=40):
                     send_btn = gr.Button("↑", elem_classes="send-btn")
                 
-            gr.HTML('<div class="footer-text">Kadel Lab Assistant can make mistakes. Verify important info.</div>')
+            gr.HTML('<div class="footer-text">Kadel Labs Assistant can make mistakes. Verify important info.</div>')
 
         # ── LOGIC BINDINGS ──
         

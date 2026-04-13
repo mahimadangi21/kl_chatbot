@@ -27,7 +27,7 @@ detect = None
 
 load_dotenv()
 
-app = FastAPI(title="Kadel Lab Assistant API")
+app = FastAPI(title="Kadel Labs Assistant API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -78,13 +78,29 @@ async def chat_endpoint(request: ChatRequest):
 async def health():
     return {"status": "ok", "model": os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")}
 
+@app.get("/sync/status")
+async def sync_status():
+    """Check if the knowledge base is synchronized (index exists)."""
+    exists = os.path.exists("./storage")
+    return {"synced": exists}
+
+@app.post("/sync")
+async def sync_knowledge():
+    """Trigger the knowledge base synchronization."""
+    try:
+        from src.rag_engine import build_index
+        build_index()
+        return {"message": "Knowledge Base Synchronized Successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Serve pre-built React UI
 if os.path.exists("ui/dist"):
     app.mount("/", StaticFiles(directory="ui/dist", html=True), name="ui")
 else:
     @app.get("/")
     async def root():
-        return {"message": "Kadel Lab Assistant API is running."}
+        return {"message": "Kadel Labs Assistant API is running."}
 
 if __name__ == "__main__":
     import uvicorn

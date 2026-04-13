@@ -13,3 +13,7 @@ node_modules/
 .env.local
 .env.*.local
 temp_hf_deploy*
+storage/
+last_prompt.txt
+scratch/
+*.log

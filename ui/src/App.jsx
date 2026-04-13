@@ -19,7 +19,10 @@ import {
   Menu as MenuIcon,
   X,
   Brain,
-  Zap
+  Zap,
+  Edit2,
+  Check as CheckIcon,
+  X as XIcon
 } from 'lucide-react';
 import { useSpeechToText } from './hooks/useSpeechToText';
 import { clsx } from 'clsx';
@@ -37,55 +40,121 @@ function cn(...inputs) {
 
 // ── SIDEBAR COMPONENT ──────────────────────────────────────────────
 
-const Sidebar = ({ history, activeId, onNew, onSelect, onClear, isSidebarOpen }) => (
-  <aside className={cn(
-    "dark:bg-brand-sidebar bg-[#f8fafc] border-r dark:border-white/5 border-gray-200 flex flex-col overflow-hidden transition-all duration-300 shrink-0",
-    isSidebarOpen ? "w-[280px]" : "w-0 opacity-0"
-  )}>
-    <div className="p-4 flex flex-col h-full min-w-[280px]">
-      <button 
-        onClick={onNew}
-        className="flex items-center gap-3 px-4 py-3 dark:bg-white/5 bg-white border dark:border-white/10 border-gray-200 rounded-xl hover:bg-brand-accent/5 transition-all mb-6 dark:text-white text-[#1e293b] font-semibold group active:scale-95 shadow-sm"
-      >
-        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300 text-brand-accent" />
-        New Chat
-      </button>
+const Sidebar = ({ history, activeId, onNew, onSelect, onClear, onDelete, onRename, isSidebarOpen }) => {
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 mb-4 pr-1">
-        <label className="text-[10px] font-black dark:text-gray-500 text-gray-400 uppercase tracking-[0.2em] px-3 mb-3 block">Conversations</label>
-        {history.map((chat) => (
-          <button
-            key={chat.id}
-            onClick={() => onSelect(chat.id)}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative break-all text-left",
-              activeId === chat.id 
-                ? "bg-brand-accent/10 dark:text-white text-brand-accent ring-1 ring-brand-accent/20" 
-                : "dark:text-gray-500 text-gray-600 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-black"
-            )}
-          >
-            <MessageSquare className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate flex-1 text-sm font-medium">{chat.title}</span>
-          </button>
-        ))}
-      </div>
+  const handleEditStart = (e, chat) => {
+    e.stopPropagation();
+    setEditingId(chat.id);
+    setEditTitle(chat.title);
+  };
 
-      <div className="pt-4 border-t border-gray-200 dark:border-white/10">
+  const handleEditSave = (e, id) => {
+    e.stopPropagation();
+    if (editTitle.trim()) {
+      onRename(id, editTitle.trim());
+    }
+    setEditingId(null);
+  };
+
+  const handleEditCancel = (e) => {
+    e.stopPropagation();
+    setEditingId(null);
+  };
+
+  return (
+    <aside className={cn(
+      "dark:bg-brand-sidebar bg-[#f8fafc] border-r dark:border-white/5 border-gray-200 flex flex-col overflow-hidden transition-all duration-300 shrink-0",
+      isSidebarOpen ? "w-[280px]" : "w-0 opacity-0"
+    )}>
+      <div className="p-4 flex flex-col h-full min-w-[280px]">
         <button 
-          onClick={onClear}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-red-500 transition-all text-sm group"
+          onClick={onNew}
+          className="flex items-center gap-3 px-4 py-3 dark:bg-white/5 bg-white border dark:border-white/10 border-gray-200 rounded-xl hover:bg-brand-accent/5 transition-all mb-6 dark:text-white text-[#1e293b] font-semibold group active:scale-95 shadow-sm"
         >
-          <Trash2 className="w-4 h-4" />
-          Clear All History
+          <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300 text-brand-accent" />
+          New Chat
         </button>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 mb-4 pr-1">
+          <label className="text-[10px] font-black dark:text-gray-500 text-gray-500 uppercase tracking-[0.2em] px-3 mb-3 block">Conversations</label>
+          {history.map((chat) => (
+            <div
+              key={chat.id}
+              onClick={() => onSelect(chat.id)}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative break-all text-left cursor-pointer",
+                activeId === chat.id 
+                  ? "bg-brand-accent/10 dark:text-white text-brand-accent ring-1 ring-brand-accent/20" 
+                  : "dark:text-gray-500 text-gray-600 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-black"
+              )}
+            >
+              <MessageSquare className="w-4 h-4 flex-shrink-0" />
+              
+              {editingId === chat.id ? (
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleEditSave(e, chat.id);
+                      if (e.key === 'Escape') handleEditCancel(e);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-1 bg-white dark:bg-gray-800 border dark:border-white/10 border-gray-300 rounded px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                  />
+                  <div className="flex gap-1">
+                     <button onClick={(e) => handleEditSave(e, chat.id)} className="p-1 hover:text-green-500 transition-colors">
+                        <CheckIcon className="w-3.5 h-3.5" />
+                     </button>
+                     <button onClick={handleEditCancel} className="p-1 hover:text-red-500 transition-colors">
+                        <XIcon className="w-3.5 h-3.5" />
+                     </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <span className="truncate flex-1 text-sm font-medium">{chat.title}</span>
+                  <div className="flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={(e) => handleEditStart(e, chat)}
+                      className="p-1.5 hover:bg-brand-accent/10 rounded-lg dark:text-gray-400 text-gray-700 hover:text-brand-accent transition-all"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onDelete(chat.id); }}
+                      className="p-1.5 hover:bg-red-500/10 rounded-lg dark:text-gray-400 text-gray-700 hover:text-red-500 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-4 border-t border-gray-200 dark:border-white/10">
+          <button 
+            onClick={onClear}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-red-500 transition-all text-sm group"
+          >
+            <Trash2 className="w-4 h-4" />
+            Clear All History
+          </button>
+        </div>
       </div>
-    </div>
-  </aside>
-);
+    </aside>
+  );
+};
 
 // ── MESSAGE COMPONENT ──────────────────────────────────────────────
 
 const MessageBubble = ({ role, content, model, language }) => {
+  const { settings } = useApp();
   const isUser = role === 'user';
   const [copied, setCopied] = useState(false);
 
@@ -119,8 +188,10 @@ const MessageBubble = ({ role, content, model, language }) => {
         
         <div className="flex flex-col gap-2 flex-1">
           {!isUser && (
-             <div className="flex items-center gap-2 px-1 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-               <span className="text-brand-accent">{model?.split(' ')[0] || 'Groq'}</span>
+             <div className="flex items-center gap-2 px-1 text-[10px] font-bold uppercase tracking-widest dark:text-gray-500 text-gray-500">
+               <span className={cn("font-black", settings.theme === 'dark' ? "text-white" : "text-black")}>
+                  {model?.split(' ')[0] || 'Intelligence Engine'}
+               </span>
                <span>•</span>
                <span className="opacity-60">{language || 'English'}</span>
              </div>
@@ -130,7 +201,7 @@ const MessageBubble = ({ role, content, model, language }) => {
             "p-4 px-5 rounded-2xl relative shadow-sm transition-all",
             isUser 
               ? "bg-brand-user text-white rounded-tr-none shadow-brand-accent/20" 
-              : "bg-brand-bot dark:bg-brand-bot bg-[#ffffff] dark:text-gray-200 text-brand-bg border border-gray-200 dark:border-white/5 rounded-tl-none shadow-sm hover:shadow-md"
+              : "bg-brand-bot dark:bg-brand-bot bg-[#ffffff] dark:text-gray-200 text-black border border-gray-200 dark:border-white/5 rounded-tl-none shadow-sm hover:shadow-md"
           )}>
             <div className="markdown-content">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -167,10 +238,14 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const [history, setHistory] = useState(() => JSON.parse(localStorage.getItem('kl_history') || '[]'));
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [activeChatId, setActiveChatId] = useState(() => {
+    const saved = localStorage.getItem('kl_active_chat');
+    return saved ? saved : null;
+  });
   const [isSynced, setIsSynced] = useState(true); // Default to true to hide by default
 
   const scrollRef = useRef(null);
+  const textareaRef = useRef(null);
   const { isListening, transcript, startListening, stopListening, setTranscript } = useSpeechToText();
 
   useEffect(() => {
@@ -192,6 +267,14 @@ function App() {
   }, [history]);
 
   useEffect(() => {
+    if (activeChatId) {
+      localStorage.setItem('kl_active_chat', activeChatId);
+    } else {
+      localStorage.removeItem('kl_active_chat');
+    }
+  }, [activeChatId]);
+
+  useEffect(() => {
     if (transcript) {
       setInput(prev => prev + ' ' + transcript);
       setTranscript('');
@@ -201,6 +284,13 @@ function App() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
 
   useEffect(() => {
     // Sync dark class with settings
@@ -222,6 +312,24 @@ function App() {
       setMessages(chat.messages);
       setActiveChatId(id);
     }
+  };
+
+  useEffect(() => {
+    if (activeChatId && messages.length === 0) {
+      const chat = history.find(c => String(c.id) === String(activeChatId));
+      if (chat) setMessages(chat.messages);
+    }
+  }, [activeChatId, history]);
+
+  const onDeleteChat = (id) => {
+    if (confirm("Delete this conversation?")) {
+      setHistory(prev => prev.filter(c => c.id !== id));
+      if (activeChatId === id) onNew();
+    }
+  };
+
+  const onRenameChat = (id, newTitle) => {
+    setHistory(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
   };
 
   const onClear = () => {
@@ -283,7 +391,11 @@ function App() {
             const data = JSON.parse(line);
             
             if (data.error) {
-              streamContent = `⚠️ **Error:** ${data.error}`;
+              let errorMsg = data.error;
+              if (errorMsg.includes('429') || errorMsg.includes('rate_limit')) {
+                errorMsg = "🕒 The AI engine is currently busy (Rate Limit). Please try again in 18 minutes or use a different model.";
+              }
+              streamContent = `⚠️ **Assistant Note:** ${errorMsg}`;
               setMessages(prev => {
                 const updated = [...prev];
                 updated[updated.length - 1].content = streamContent;
@@ -302,11 +414,28 @@ function App() {
             }
 
             if (data.delta) {
-              // If we were showing a status, clear it for the first real chunk
+              const chunk = data.delta;
+              
+              // ABSOLUTE SAFEGUARD: If raw error strings leak into the delta stream
+              const lowerChunk = chunk.toLowerCase();
+              if (lowerChunk.includes('error code: 429') || 
+                  lowerChunk.includes('rate_limit_exceeded') || 
+                  lowerChunk.includes('quota exceeded') ||
+                  lowerChunk.includes('rate limit reached')) {
+                
+                streamContent = "🕒 **Assistant Note:** The AI engine is currently busy due to high traffic (Rate Limit reached). Please try again in a few minutes or switch to another model in Settings.";
+                setMessages(prev => {
+                  const updated = [...prev];
+                  updated[updated.length - 1].content = streamContent;
+                  return updated;
+                });
+                break; // Stop processing this chunk
+              }
+
               if (streamContent === '') {
-                streamContent = data.delta;
+                streamContent = chunk;
               } else {
-                streamContent += data.delta;
+                streamContent += chunk;
               }
               
               setMessages(prev => {
@@ -364,6 +493,8 @@ function App() {
         onNew={onNew}
         onSelect={onSelect}
         onClear={onClear}
+        onDelete={onDeleteChat}
+        onRename={onRenameChat}
         isSidebarOpen={isSidebarOpen}
       />
 
@@ -379,7 +510,7 @@ function App() {
             </button>
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-accent animate-pulse" />
-              <h1 className={cn("font-bold text-sm tracking-tight", settings.theme === 'dark' ? "text-white" : "text-slate-900")}>Kadel Labs Assistant</h1>
+              <h1 className={cn("font-black text-sm tracking-tight", settings.theme === 'dark' ? "text-white" : "text-black")}>Kadel Labs Assistant</h1>
             </div>
           </div>
           
@@ -387,6 +518,7 @@ function App() {
              <ModelSelector 
                selected={settings.model} 
                onChange={(m) => setSettings(p => ({ ...p, model: m }))} 
+               theme={settings.theme}
              />
              <ThemeToggle 
                theme={settings.theme} 
@@ -414,8 +546,8 @@ function App() {
                   <div className="w-20 h-20 bg-brand-accent/10 rounded-3xl flex items-center justify-center mb-8 border border-brand-accent/20 animate-float shadow-2xl">
                     <Brain className="w-10 h-10 text-brand-accent" />
                   </div>
-                  <h2 className="text-3xl font-black mb-4 dark:text-white text-[#1e293b]">Ready to Help</h2>
-                  <p className="dark:text-gray-400 text-gray-500 max-w-sm mx-auto mb-10 font-medium">
+                  <h2 className="text-3xl font-black mb-4 dark:text-white text-black">Ready to Help</h2>
+                  <p className="dark:text-gray-400 text-slate-600 max-w-sm mx-auto mb-10 font-medium">
                     Select a model above and start exploring your training materials in multiple languages.
                   </p>
                 </motion.div>
@@ -434,6 +566,7 @@ function App() {
               className="bg-white dark:bg-[#1a2333] border border-gray-200 dark:border-white/10 rounded-3xl shadow-xl flex items-end gap-2 p-1.5 focus-within:ring-4 focus-within:ring-brand-accent/10 transition-all"
             >
               <textarea 
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -443,8 +576,9 @@ function App() {
                   }
                 }}
                 rows={1}
+                style={{ resize: 'none' }}
                 placeholder={`Ask ${settings.model.split(' ')[0]} in ${settings.language}...`}
-                className="flex-1 bg-transparent border-none dark:text-white text-[#1e293b] dark:placeholder-gray-500 placeholder-gray-400 focus:ring-0 p-4 max-h-[220px] transition-all"
+                className="flex-1 bg-transparent border-none dark:text-white text-slate-900 dark:placeholder-gray-500 placeholder-gray-500 focus:ring-0 p-4 max-h-[220px] transition-all overflow-y-auto"
               />
               <div className="flex items-center gap-2 pr-2 pb-2">
                 <button 

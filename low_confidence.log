@@ -243,3 +243,149 @@
 2026-04-13 13:26:48,674 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-04-13 13:27:11,023 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-04-13 13:28:23,354 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:42:27,620 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:43:08,031 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:43:31,491 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:43:45,752 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:44:08,619 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:44:40,488 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:45:08,699 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 13:45:42,253 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:10:34,986 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:10:42,066 - Loading all indices.
+2026-04-13 15:11:54,001 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:12:08,070 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:12:59,487 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:13:13,471 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:13:31,351 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:16:06,355 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:16:25,598 - Loading all indices.
+2026-04-13 15:16:25,607 - `llama-index-readers-file` package not found, some file readers will not be available if not provided by the `file_extractor` parameter.
+2026-04-13 15:16:25,615 - `llama-index-readers-file` package not found, some file readers will not be available if not provided by the `file_extractor` parameter.
+2026-04-13 15:16:25,620 - `llama-index-readers-file` package not found, some file readers will not be available if not provided by the `file_extractor` parameter.
+2026-04-13 15:21:14,447 - Retrying request to /openai/v1/chat/completions in 0.383538 seconds
+2026-04-13 15:22:14,913 - Retrying request to /openai/v1/chat/completions in 0.789061 seconds
+2026-04-13 15:22:21,114 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:22:25,821 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:22:43,409 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:24:48,639 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:25:14,131 - Loading all indices.
+2026-04-13 15:25:26,517 - Loading all indices.
+2026-04-13 15:26:27,000 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:26:32,324 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:26:44,855 - Loading all indices.
+2026-04-13 15:26:50,084 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:27:41,452 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:28:08,080 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:28:18,764 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:28:45,418 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:29:57,199 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:30:17,712 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:50:54,956 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:51:02,283 - Loading all indices.
+2026-04-13 15:52:01,954 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:52:29,446 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:54:35,886 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:54:44,080 - Loading all indices.
+2026-04-13 15:54:45,067 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:54:52,468 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 15:57:29,915 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:57:51,490 - Loading all indices.
+2026-04-13 15:57:52,309 - Loading all indices.
+2026-04-13 15:58:50,737 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 15:58:57,755 - Loading all indices.
+2026-04-13 16:02:23,425 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:04:48,946 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 16:04:57,000 - Loading all indices.
+2026-04-13 16:08:03,778 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:11:30,091 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 16:11:37,046 - Loading all indices.
+2026-04-13 16:11:37,773 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:12:51,713 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 16:12:59,701 - Loading all indices.
+2026-04-13 16:27:16,029 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:30:36,373 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 16:30:48,399 - Loading all indices.
+2026-04-13 16:30:50,540 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:31:28,603 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 16:31:35,782 - Loading all indices.
+2026-04-13 16:35:15,907 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:35:22,601 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:37:03,753 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 16:37:11,369 - Loading all indices.
+2026-04-13 16:37:39,855 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:38:27,858 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 16:40:11,316 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:09:43,359 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:09:50,416 - Loading all indices.
+2026-04-13 17:11:51,230 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:11:59,021 - Loading all indices.
+2026-04-13 17:13:21,208 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:13:27,794 - Loading all indices.
+2026-04-13 17:15:31,773 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:15:38,444 - Loading all indices.
+2026-04-13 17:18:28,064 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:18:35,266 - Loading all indices.
+2026-04-13 17:20:45,921 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:20:53,032 - Loading all indices.
+2026-04-13 17:23:10,841 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:23:17,925 - Loading all indices.
+2026-04-13 17:23:22,838 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:23:33,406 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:25:56,983 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:26:00,935 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:26:03,844 - Loading all indices.
+2026-04-13 17:28:30,800 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:28:37,044 - Loading all indices.
+2026-04-13 17:29:15,016 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:29:27,883 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:29:45,674 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:29:57,224 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:30:05,250 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:30:12,554 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:30:31,266 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:30:42,913 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:33:32,306 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:33:36,001 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:33:39,828 - Loading all indices.
+2026-04-13 17:33:55,084 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:34:25,419 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-13 17:34:35,973 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:36:31,899 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-04-13 17:36:31,908 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: e328baa3-7695-4470-b899-a1956ab4703c)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 17:36:31,908 - Retrying in 1s [Retry 1/5].
+2026-04-13 17:36:32,911 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 4ac07697-2491-42da-ac88-615137244fa1)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 17:36:32,912 - Retrying in 2s [Retry 2/5].
+2026-04-13 17:36:34,914 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 7008f4fa-c96a-4d6f-ab46-e23eeb6c7f9e)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 17:36:34,915 - Retrying in 4s [Retry 3/5].
+2026-04-13 17:36:42,972 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: c6811063-a7c3-4f5a-84e4-da7518dca995)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 17:36:42,972 - Retrying in 8s [Retry 4/5].
+2026-04-13 17:36:50,977 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 01b057a8-2218-4c4c-9fd5-f87600cd04f6)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 17:36:50,977 - Retrying in 8s [Retry 5/5].
+2026-04-13 17:36:58,981 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: bdd83312-b633-4a2d-ab31-8d2fb18ac547)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./modules.json
+2026-04-13 17:36:58,986 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 846019b1-b5db-4692-9ac7-364cfe946c4d)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:36:58,986 - Retrying in 1s [Retry 1/5].
+2026-04-13 17:36:59,993 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: e8d04808-7e29-4e70-976d-a7c830158107)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:36:59,994 - Retrying in 2s [Retry 2/5].
+2026-04-13 17:37:00,020 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:37:12,576 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:37:13,070 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: c627bf61-9da3-441b-a331-e605f0ef2498)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:13,071 - Retrying in 4s [Retry 3/5].
+2026-04-13 17:37:17,073 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 18ea9eef-6a39-4e01-ab89-64aa0717f105)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:17,074 - Retrying in 8s [Retry 4/5].
+2026-04-13 17:37:25,078 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: ff4c4670-b69b-40a9-9030-0b10bf6ec82f)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:25,078 - Retrying in 8s [Retry 5/5].
+2026-04-13 17:37:33,081 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 93f6f847-2378-4f6b-b54d-ebea36fb8783)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:33,086 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: c056fd2d-8ff2-40c1-a613-09796cb0196d)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:33,086 - Retrying in 1s [Retry 1/5].
+2026-04-13 17:37:34,090 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: c26da601-89a9-4014-a003-a74db1f556cb)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:34,090 - Retrying in 2s [Retry 2/5].
+2026-04-13 17:37:36,093 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: f443a255-cd1c-4a71-9a64-ee6a1a3d9da8)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:36,094 - Retrying in 4s [Retry 3/5].
+2026-04-13 17:37:40,096 - '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno 11001] getaddrinfo failed)"))'), '(Request ID: 6e31d199-a088-41c6-b2c5-01d3816b4497)')' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/./config_sentence_transformers.json
+2026-04-13 17:37:40,097 - Retrying in 8s [Retry 4/5].
+2026-04-13 17:37:50,607 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:37:56,994 - Loading all indices.
+2026-04-13 17:38:02,718 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 17:43:19,043 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-13 18:16:41,813 - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

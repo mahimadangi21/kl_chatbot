@@ -45,7 +45,7 @@ const SettingsDrawer = ({ isOpen, onClose, settings, setSettings, isSynced, setI
                   <Cpu className="w-5 h-5 text-brand-accent" />
                 </div>
                 <div>
-                  <h2 className={cn("text-lg font-bold", isDark ? "text-white" : "text-brand-bg")}>Settings</h2>
+                  <h2 className={cn("text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>Settings</h2>
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Configuration Panel</p>
                 </div>
               </div>
@@ -98,6 +98,7 @@ const SettingsDrawer = ({ isOpen, onClose, settings, setSettings, isSynced, setI
                 <LanguageSelector 
                   selected={settings.language} 
                   onChange={(val) => setSettings(prev => ({ ...prev, language: val }))} 
+                  isDark={isDark}
                 />
               </section>
 
@@ -119,6 +120,7 @@ const SettingsDrawer = ({ isOpen, onClose, settings, setSettings, isSynced, setI
                   <SyncButton 
                     onComplete={() => setIsSynced(true)} 
                     variant={isSynced ? "minimal" : "full"}
+                    isDark={isDark}
                   />
                 </div>
               </section>

@@ -66,11 +66,22 @@ async def chat_endpoint(request: ChatRequest):
             query_to_use = processed.get("corrected", msg)
 
             for chunk in generate_response_stream(query_to_use, request.history, lang, request.model):
-                yield json.dumps({"delta": chunk}) + "\n"
+                # If the engine yielded a pre-formatted JSON error, pass it directly
+                if chunk.startswith('{"error":'):
+                    yield chunk + "\n"
+                else:
+                    yield json.dumps({"delta": chunk}) + "\n"
                 await asyncio.sleep(0.01)
 
         except Exception as e:
-            yield json.dumps({"error": str(e)}) + "\n"
+            error_str = str(e).lower()
+            friendly_msg = "⚠️ An unexpected error occurred. Please try again."
+            if "429" in error_str or "rate limit" in error_str:
+                friendly_msg = "🕒 The AI engine is currently busy (Rate Limit). Please wait a few seconds and try again."
+            elif "503" in error_str or "overloaded" in error_str:
+                friendly_msg = "🌪️ The AI server is currently overloaded. Please try again in a moment."
+            
+            yield json.dumps({"error": friendly_msg}) + "\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

@@ -66,43 +66,50 @@ def build_index():
     kb_path = DATA_DIR
     # Restrict to these specific PDFs as requested
     ALLOWED_FILES = ["Email etiquette.pdf", "mahima_dangi_contract.pdf", "data-ai-ethics-policy.pdf", "software_engineering_tutorial.pdf"]
-    files = [f for f in os.listdir(kb_path) if f in ALLOWED_FILES]
-    print(f"Restricted Files in {kb_path}: {files}")
     
-    if not files:
-        print(f"ERROR: No allowed PDFs found in {kb_path}!")
-        print(f"Please ensure {', '.join(ALLOWED_FILES)} are in {kb_path}/")
-        return None
-
-    print(f"Building index from embedded knowledge data in src/knowledge_data.py...")
-    from llama_index.core import Document
-    try:
-        from src.knowledge_data import KNOWLEDGE_BASE
-    except ImportError:
-        print("ERROR: src/knowledge_data.py not found. Please run extraction script first.")
-        return None
-
+    from llama_index.core import SimpleDirectoryReader
+    
+    # Check for actual PDF files first for higher quality extraction
+    available_pdfs = [f for f in os.listdir(kb_path) if f in ALLOWED_FILES and f.endswith('.pdf')]
+    
     documents = []
-    for filename, text in KNOWLEDGE_BASE.items():
-        if text.strip():
-            doc = Document(
-                text=text,
-                metadata={"file_name": filename, "source": filename}
-            )
-            documents.append(doc)
-            print(f"[INFO] Loaded {filename} from embedded data ({len(text)} chars)")
-        else:
-            print(f"[WARN] {filename} in embedded data seems to have no text.")
     
+    if available_pdfs:
+        print(f"[INFO] Found {len(available_pdfs)} physical PDFs. Loading directly for high-fidelity indexing...")
+        # Load only allowed files
+        reader = SimpleDirectoryReader(
+            input_dir=kb_path,
+            input_files=[os.path.join(kb_path, f) for f in available_pdfs],
+            filename_as_id=True
+        )
+        documents.extend(reader.load_data())
+    else:
+        print(f"[WARN] No physical PDFs found. Falling back to embedded knowledge data...")
+        from src.knowledge_data import KNOWLEDGE_BASE
+        from llama_index.core import Document
+        for filename, text in KNOWLEDGE_BASE.items():
+            if text.strip() and filename in ALLOWED_FILES:
+                doc = Document(
+                    text=text,
+                    metadata={"file_name": filename, "source": filename}
+                )
+                documents.append(doc)
+
     if not documents:
-        print("ERROR: Documents loaded but 0 chunks created or no text extracted!")
+        print("ERROR: No documents could be loaded!")
         return None
     
-    # Step 1: Fix chunking (SentenceSplitter 512/64)
+    print(f"[INFO] Total documents/pages loaded: {len(documents)}")
+    
+    # Step 1: Use a better node parser for technical tutorials
+    from llama_index.core.node_parser import SentenceSplitter
+    node_parser = SentenceSplitter(chunk_size=768, chunk_overlap=128) # Slightly larger chunks for SDLC context
+    
     storage_context = StorageContext.from_defaults()
     index = VectorStoreIndex.from_documents(
         documents, 
         storage_context=storage_context,
+        transformations=[node_parser],
         show_progress=True
     )
     
@@ -139,15 +146,17 @@ _INDEX = load_or_build_index()
 # ── PROMPT ENGINEERING (Step 2) ───────────────────────────────────
 
 QA_PROMPT_TMPL = (
-    "You are an intelligent document assistant for the Kadel Lab Training Centre. Your job is to answer questions using the provided context.\n\n"
-    "## OPERATIONAL GUIDELINES:\n"
-    "1. Answer based ONLY on the provided CONTEXT. Do not use outside knowledge.\n"
-    "2. If the answer is not in the context, politely state: \"I could not find information about this in the training documents.\"\n"
-    "3. For DEFINITIONS (e.g. 'What is email etiquette?'): Provide a comprehensive but concise explanation based on the text.\n"
-    "4. For POLICIES or RULES: Summarize clearly in 3-5 sentences.\n"
-    "5. For FACTUAL/SHORT questions: Be direct and give only the specific detail (1-2 lines).\n"
-    "6. Do NOT use introductory phrases like 'According to the document...' or 'Based on the references...'.\n"
-    "7. Maintain a professional, helpful tone.\n\n"
+    "You are the Kadel Lab Reasoning Assistant. Your goal is to provide logical, accurate, and context-backed answers.\n\n"
+    "## REASONING PROTOCOL:\n"
+    "1. Analyze the Question: Understand exactly what the user is asking.\n"
+    "2. Consult Context: Look for relevant facts and rules in the provided documents.\n"
+    "3. Logical Step-by-Step: If the question requires reasoning (type: logical), explain the logic behind the answer briefly.\n"
+    "4. NO OUTSIDE INFO: Do not use information from your training data that is not in the context.\n"
+    "5. NO HALLUCINATION: If the logic cannot be supported by the text, say \"I cannot provide a logical conclusion based on the available documents.\"\n\n"
+    "## OUTPUT FORMAT:\n"
+    "- DIRECT: No panygerics or fillers.\n"
+    "- CLEAR: Use simple but professional language.\n"
+    "- EVIDENCE-BASED: Mention the source if multiple documents are involved.\n\n"
     "CONTEXT:\n"
     "---------------------\n"
     "{context_str}\n"
@@ -240,30 +249,42 @@ def call_gemini_direct(system_instruction: str, user_prompt: str) -> str:
             raise e
 
 def smart_retrieve(query: str, index):
-    """Retrieves nodes and filters them to provide a balanced context from all relevant documents."""
-    # Step 1: Broad retrieval across all documents - Increased to 15 for better coverage
-    retriever = index.as_retriever(similarity_top_k=15)
+    """Retrieves nodes with a multi-pass approach to ensure technical terms aren't missed."""
+    # Pass 1: Broad semantic search
+    retriever = index.as_retriever(similarity_top_k=25)
     raw_nodes = retriever.retrieve(query)
     
     if not raw_nodes:
-        print(f"[DEBUG] No nodes found for query: {query}")
         return []
 
-    # Sort by score descending
-    nodes_sorted = sorted(raw_nodes, 
-                   key=lambda x: x.score if hasattr(x, 'score') and x.score is not None else 0, 
-                   reverse=True)
+    # Sort nodes: Prioritize the specific document if mentioned in query
+    query_lower = query.lower()
     
-    print(f"[DEBUG] Retrieved {len(nodes_sorted)} nodes. Best score: {nodes_sorted[0].score if nodes_sorted else 'N/A'}")
-    
-    # Step 2: Adaptive Context Window
-    word_count = len(query.split())
-    # For complex/definition queries or general lookups, provide more context (up to 6 chunks)
-    if word_count > 4 or any(w in query.lower() for w in ["what", "explain", "describe", "policy", "etiquette", "rules"]):
-        return nodes_sorted[:6]
+    def get_priority(node):
+        source = node.node.metadata.get('file_name', '').lower()
+        content = node.node.get_content().lower()
+        score = 0
         
-    # For very simple fact checks, provide 3 chunks
-    return nodes_sorted[:3]
+        # Boost specific documents
+        if "email" in query_lower and "email etiquette" in source: score += 50
+        if "sdlc" in query_lower and "software" in source: score += 50
+        if "policy" in query_lower and "policy" in source: score += 50
+        
+        # Severe penalty for irrelevant documents
+        if "email" in query_lower and "software" in source and "email" not in content:
+            score -= 100
+        
+        # Boost exact keywords
+        if "do's" in query_lower and "do " in content: score += 5
+        if "don'ts" in query_lower and "don't" in content: score += 5
+        
+        return score + (node.score or 0)
+
+    # Filter out severely penalized nodes
+    nodes_sorted = [n for n in raw_nodes if get_priority(n) > -50]
+    nodes_sorted = sorted(nodes_sorted, key=get_priority, reverse=True)
+    
+    return nodes_sorted[:8] 
 
 def build_smart_context(nodes: list, query: str) -> str:
     """Provides full relevant chunks with clear source markers to prevent data loss while keeping context manageable."""
@@ -275,7 +296,7 @@ def build_smart_context(nodes: list, query: str) -> str:
         if not text:
             continue
             
-        clean_text = text.replace('\n', ' ').strip()
+        clean_text = text.strip()
         context_parts.append(f"REFERENCE {i+1} [Source: {source}]:\n{clean_text}")
         
     return "\n\n".join(context_parts)
@@ -325,27 +346,31 @@ def generate_response_stream(user_input: str, history: List[dict] = [], manual_l
         }
         not_found_msg = not_found_msgs.get(manual_lang, not_found_msgs["English"])
 
-        system_prompt = f"""You are the Kadel Lab Training Assistant.
-Your mission is to provide accurate and helpful information based on the provided training documents.
+        system_prompt = f"""You are the Kadel Labs Professional Assistant. 
+Your only task is to extract precisely what the user asks for from the DOCUMENT CONTEXT below.
 
-STRICT LANGUAGE RULE:
-- The user has selected {manual_lang} as their preferred language.
-- You MUST answer in {manual_lang}.
-- If Hindi, use Devanagari. If Hinglish, use Roman script.
+STRICT INSTRUCTIONS:
+1. TABULAR FORMAT: If the user asks for a table or do's/don'ts, YOU MUST provide a Markdown table.
+2. CATEGORIZATION: For Do's and Don'ts, categorize the rules by topic (e.g., Tone, Subject Line, Etiquette).
+3. If the answer is in the document, PROVIDE IT. Do not say you can't find it if it is partially mentioned.
+4. If information is totally absent, say: "{not_found_msg}".
 
-CORE INSTRUCTIONS:
-1. {q_info['instruction']}
-2. Answer based ONLY on the Reference Content below. 
-3. If information is missing, say: "{not_found_msg}".
-4. Do NOT use introductory filler like "According to REFERENCE 1...". Give the answer directly.
-5. Provide a professional and constructive tone.
+LANGUAGE: {manual_lang}
 
-REFERENCE CONTENT:
+DOCUMENT CONTEXT:
 {context}"""
 
         user_query_msg = f"Question: {user_input}"
 
-        # Step 5: Execute with Provider Logic & Fallback
+        # LOG PROMPT FOR DEBUGGING (Development only)
+        with open("last_prompt.txt", "w", encoding="utf-8") as f:
+            f.write("=== SYSTEM PROMPT ===\n")
+            f.write(system_prompt)
+            f.write("\n\n=== USER QUERY ===\n")
+            f.write(user_query_msg)
+
+        # Execute with only the last 2 interactions to keep focus sharp
+        focused_history = history[-2:] if len(history) > 2 else history
         answer = ""
         actual_provider = provider.lower()
         
@@ -361,8 +386,19 @@ REFERENCE CONTENT:
                     answer = call_gemini_direct(system_prompt, user_query_msg)
                 else:
                     answer = LLMManager.call_groq_direct(system_prompt, user_query_msg)
-            except Exception as e2:
-                yield f"AI service error: {str(e2)}"
+            except Exception as e:
+                error_str = str(e).lower()
+                friendly_msg = "⚠️ An unexpected error occurred. Please try again."
+                
+                if "429" in error_str or "rate limit" in error_str:
+                    friendly_msg = "🕒 The AI engine is currently busy (Rate Limit). Please wait a few seconds and try again."
+                elif "503" in error_str or "overloaded" in error_str:
+                    friendly_msg = "🌪️ The AI server is currently overloaded. Please try again in a moment."
+                elif "authentication" in error_str or "401" in error_str:
+                    friendly_msg = "🔑 AI Authentication failed. Please check the API configuration."
+                
+                print(f"DEBUG Error: {e}")
+                yield json.dumps({"error": friendly_msg}) + "\n"
                 return
 
         # POST-PROCESSING: Remove any context markers the AI might have copied
@@ -390,9 +426,9 @@ REFERENCE CONTENT:
         print(f"=== END DEBUG ===\n")
 
     except Exception as e:
-        # Final safety for Windows printing
-        try:
-            print(f"CRITICAL ERROR in generate_response_stream: {str(e).encode('ascii', 'ignore').decode('ascii')}")
-        except:
-            print("CRITICAL ERROR in generate_response_stream: [Encoding Error in Message]")
-        yield f"An error occurred: {str(e)}"
+        error_str = str(e).lower()
+        friendly_msg = "⚠️ An error occurred during response generation."
+        if "429" in error_str or "rate limit" in error_str:
+            friendly_msg = "🕒 The assistant is receiving too many requests. Please pause for a moment."
+            
+        yield f"\n\n{friendly_msg}"

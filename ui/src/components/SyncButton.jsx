@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const SyncButton = ({ onComplete, variant = "full" }) => {
+const SyncButton = ({ onComplete, variant = "full", isDark = true }) => {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const handleSync = async () => {

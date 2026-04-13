@@ -22,7 +22,7 @@ class LLMManager:
                     {"role": "user", "content": user_query}
                 ],
                 temperature=0.1,
-                max_tokens=1024
+                max_tokens=2048
                 # NO stop parameter used here
             )
             return response.choices[0].message.content

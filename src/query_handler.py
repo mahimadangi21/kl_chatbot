@@ -24,6 +24,13 @@ class QueryHandler:
     def detect_question_type(query: str) -> dict:
         query_lower = query.lower().strip()
         
+        # Tabular questions (Highest Priority)
+        if any(w in query_lower for w in ["table", "tabular", "chart", "comparison", "vs"]):
+            return {
+                "type": "tabular",
+                "instruction": "Present the information in a clear Markdown table format with appropriate headers."
+            }
+        
         # Date questions
         if any(w in query_lower for w in ["start date", "end date", "when", "date", "deadline", "duration", "period", "from", "till"]):
             return {
@@ -39,7 +46,7 @@ class QueryHandler:
             }
         
         # Yes/No questions
-        elif any(w in query_lower for w in ["can", "is", "are", "does", "do", "will", "should", "allowed", "permitted"]):
+        elif any(f" {w} " in f" {query_lower} " for w in ["can", "is", "are", "does", "do", "will", "should", "allowed", "permitted"]):
             return {
                 "type": "yesno",
                 "instruction": "Start with Yes or No, then explain in maximum 2 sentences."
@@ -64,6 +71,13 @@ class QueryHandler:
             return {
                 "type": "name",
                 "instruction": "Give only the name and their role. One sentence."
+            }
+        
+        # Logical/Reasoning questions
+        elif any(w in query_lower for w in ["why", "how", "compare", "difference", "reason", "because", "analyze", "logical", "if", "then", "consequence"]):
+            return {
+                "type": "logical",
+                "instruction": "Think step-by-step. Analyze the context and provide a logical explanation. Use reasoning to connect facts."
             }
         
         # Policy/rule questions
@@ -151,13 +165,33 @@ class QueryHandler:
     def expand_query(query: str) -> str:
         """Expand query with synonyms for document matching."""
         q = query.lower()
+        expanded = query
+        
+        # Location mapping
         if any(w in q for w in ["location", "office", "address", "city", "place"]):
-            return f"{query} address office location Bangalore Hoodi Junction city"
-        if any(w in q for w in ["stipend", "salary", "pay", "fees", "money"]):
-            return f"{query} stipend salary payment amount rupees"
-        if any(w in q for w in ["date", "start", "end", "period", "duration"]):
-            return f"{query} date start 2026 duration months"
-        return query
+            expanded += " address office location Bangalore Hoodi Junction city "
+            
+        # Finance/Salary
+        if any(w in q for w in ["stipend", "salary", "pay", "fees", "money", "compensation"]):
+            expanded += " stipend salary payment amount rupees compensation benefits "
+            
+        # Timeline
+        if any(w in q for w in ["date", "start", "end", "period", "duration", "timeline"]):
+            expanded += " date start 2026 duration months timeline schedule "
+            
+        # Ethics/Policy (Logical)
+        if any(w in q for w in ["ethics", "privacy", "policy", "consequence", "violation"]):
+            expanded += " ethics principles privacy guidance violation consequences policy "
+            
+        # Work culture/Etiquette
+        if any(w in q for w in ["etiquette", "behavior", "standard", "rule", "conduct", "do's", "don'ts"]):
+            expanded += " etiquette behavior standards conduct rules guidelines professional dos and donts email manners "
+            
+        # Software Engineering / SDLC
+        if any(w in q for w in ["sdlc", "development lifecycle", "software engineering", "activities", "testing", "paradigm"]):
+            expanded += " software development life cycle sdlc activities phases models waterfall agile software engineering "
+
+        return expanded.strip()
 
     @staticmethod
     def is_hindi(text: str) -> bool:

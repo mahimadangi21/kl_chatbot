@@ -14,6 +14,7 @@ from llama_index.core import (
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.gemini import Gemini
+from llama_index.core.llms import MockLLM
 from llama_index.core.postprocessor import SimilarityPostprocessor, MetadataReplacementPostProcessor
 import google.generativeai as genai
 # try:
@@ -39,24 +40,10 @@ DATA_DIR = "./knowledge_base"
 # Initialize Settings
 Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
 Settings.node_parser = SentenceSplitter(chunk_size=512, chunk_overlap=64)
-# Explicitly set Gemini as default to prevent LlamaIndex from trying to use Groq anywhere
-gemini_model = os.getenv("GEMINI_MODEL", "models/gemini-2.0-flash")
-if not gemini_model.startswith("models/"):
-    gemini_model = f"models/{gemini_model}"
-
-try:
-    Settings.llm = Gemini(
-        api_key=os.getenv("GEMINI_API_KEY"),
-        model_name=gemini_model,
-        temperature=0.1
-    )
-except Exception as e:
-    print(f"[WARN] Gemini initialization failed: {e}. Falling back to default.")
-    Settings.llm = Gemini(
-        api_key=os.getenv("GEMINI_API_KEY"),
-        model_name="models/gemini-2.0-flash",
-        temperature=0.1
-    )
+# Use MockLLM as LlamaIndex default — all real inference goes through direct SDK calls (Groq/Gemini)
+# This avoids both Gemini quota issues and the llama_index.llms.groq Pydantic v2 bug
+Settings.llm = MockLLM(max_tokens=2048)
+print("[INFO] LlamaIndex default LLM set to MockLLM (inference uses direct SDK calls).")
 
 def get_llm(provider="gemini"):
     # Groq is handled directly via SDK in llm_manager, so this only returns Gemini for LlamaIndex
@@ -214,7 +201,7 @@ def call_gemini_direct(system_instruction: str, user_prompt: str) -> str:
     """Direct Google SDK call for Gemini using system_instruction for strict personification."""
     try:
         genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-        model_name = os.environ.get("GEMINI_MODEL", "models/gemini-2.0-flash")
+        model_name = os.environ.get("GEMINI_MODEL", "models/gemini-1.5-flash")
         if not model_name.startswith("models/"):
             actual_model = f"models/{model_name}"
         else:
@@ -244,7 +231,7 @@ def call_gemini_direct(system_instruction: str, user_prompt: str) -> str:
             full_prompt = f"{system_instruction}\n\nUSER QUESTION: {user_prompt}"
             response = model.generate_content(full_prompt)
             return response.text.strip()
-        except:
+        except Exception as e2:
             print(f"Gemini direct call failed: {e}")
             raise e
 
